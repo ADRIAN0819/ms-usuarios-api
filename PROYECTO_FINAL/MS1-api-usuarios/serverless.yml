@@ -1,0 +1,67 @@
+#org: ivanrodriguezperez
+org: supermanzana25
+service: MS1-api-usuarios
+
+provider:
+  name: aws
+  runtime: python3.12
+  memorySize: 1024
+  timeout: 30
+  environment:
+    JWT_SECRET: clave_de_prueba
+    TABLE_NAME: ${sls:stage}-t_MS1_usuarios
+    TOKENS_TABLE: ${sls:stage}-t_MS1_tokens_acceso
+  iam:
+    #role: arn:aws:iam::748213590633:role/LabRole
+    role: arn:aws:iam::281612000535:role/LabRole
+
+functions:
+  crearUsuario:
+    handler: lambdas/Lambda_CrearUsuario.lambda_handler
+    events:
+      - http:
+          path: usuarios/crear
+          method: post
+          cors: true
+
+  loginUsuario:
+    handler: lambdas/Lambda_LoginUsuario.lambda_handler
+    events:
+      - http:
+          path: usuarios/login
+          method: post
+          cors: true
+
+  validarToken:
+    handler: lambdas/Lambda_ValidarTokenAcceso.lambda_handler
+    events:
+      - http:
+          path: usuarios/validar
+          method: post
+          cors: true
+
+resources:
+  Resources:
+    UsuariosTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.TABLE_NAME}
+        AttributeDefinitions:
+          - AttributeName: user_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: user_id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+
+    TokensTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${sls:stage}-t_MS1_tokens_acceso
+        AttributeDefinitions:
+          - AttributeName: token
+            AttributeType: S
+        KeySchema:
+          - AttributeName: token
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST

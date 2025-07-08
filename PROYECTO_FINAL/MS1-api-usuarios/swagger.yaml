@@ -1,0 +1,91 @@
+openapi: 3.0.0
+info:
+  title: API Usuarios - Proyecto Final
+  version: 1.0.0
+  description: API para gestionar usuarios, login y validación de acceso usando AWS Lambda y DynamoDB
+
+paths:
+  /usuarios/crear:
+    post:
+      summary: Crear un nuevo usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_id, password, tenant_id]
+              properties:
+                user_id:
+                  type: string
+                password:
+                  type: string
+                name:
+                  type: string
+                tenant_id:
+                  type: string
+      responses:
+        '200':
+          description: Usuario creado exitosamente
+        '400':
+          description: Datos inválidos
+
+  /usuarios/login:
+    post:
+      summary: Login de usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_id, password]
+              properties:
+                user_id:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Token generado exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  tenant_id:
+                    type: string
+        '403':
+          description: Credenciales incorrectas
+
+  /usuarios/validar:
+    post:
+      summary: Validar token de acceso
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+      responses:
+        '200':
+          description: Token válido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  tenant_id:
+                    type: string
+                  user_id:
+                    type: string
+        '403':
+          description: Token inválido o expirado
