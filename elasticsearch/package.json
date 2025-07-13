@@ -1,0 +1,21 @@
+{
+  "name": "elasticsearch-api",
+  "version": "1.0.0",
+  "description": "API REST para ElasticSearch Multi-Tenant",
+  "main": "api-elasticsearch.js",
+  "scripts": {
+    "start": "node api-elasticsearch.js",
+    "dev": "nodemon api-elasticsearch.js"
+  },
+  "dependencies": {
+    "@elastic/elasticsearch": "^8.11.0",
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": ["elasticsearch", "multi-tenant", "api", "search"],
+  "author": "Tu Nombre",
+  "license": "MIT"
+}
