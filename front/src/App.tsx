@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import LandingPage from "./LandingPage";
 import LoginScreen from "./components/LoginScreen";
 import RegisterScreen from "./components/RegisterScreen";
+import ProductList from "./components/ProductList";
 import type { Product, CartItem, Compra, ProductForm, UserInfo } from "./types";
 
 // API URLs
@@ -698,6 +699,12 @@ function App() {
     categoria: "",
   });
 
+  // Pagination states
+  const [currentOffset, setCurrentOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const PAGE_SIZE = 12;
+
   // Shopping cart states
   const [cart, setCart] = useState<CartItem[]>([]);
   const [compras, setCompras] = useState<Compra[]>([]);
@@ -780,7 +787,10 @@ function App() {
         setUserInfo({ user_id: data.user_id, tenant_id: data.tenant_id });
         setIsAuthenticated(true);
         setCurrentView("dashboard");
-        loadProductos();
+        // Reset pagination state when logging in
+        setCurrentOffset(0);
+        setHasMore(true);
+        loadProductos(0, false);
         // Don't show response for successful login
       } else {
         // Show error message
@@ -805,22 +815,48 @@ function App() {
     setProductos([]);
     setCompras([]);
     setResponse(""); // Clear any previous error messages
+    // Reset pagination state
+    setCurrentOffset(0);
+    setHasMore(true);
+    setLoadingMore(false);
   };
 
   // Product functions
-  const loadProductos = async () => {
+  const loadProductos = async (offset = 0, append = false) => {
     try {
-      const res = await fetch(`${API_URLS.MS2}/productos/listar`, {
+      const url = `${API_URLS.MS2}/productos/listar?limit=${PAGE_SIZE}&offset=${offset}`;
+      
+      const res = await fetch(url, {
         headers: { "Content-Type": "application/json" },
       });
       const data = await res.json();
+      
       if (data.productos) {
-        setProductos(data.productos);
-        setFilteredProducts(data.productos);
+        if (append) {
+          setProductos(prev => [...prev, ...data.productos]);
+        } else {
+          setProductos(data.productos);
+          setFilteredProducts(data.productos);
+        }
+        
+        // Update pagination info
+        const hasMoreProducts = data.pagination?.hasMore || false;
+        const nextOffset = data.pagination?.nextOffset || offset + PAGE_SIZE;
+        
+        setHasMore(hasMoreProducts);
+        setCurrentOffset(nextOffset);
       }
     } catch (error) {
       console.error("Error loading products:", error);
     }
+  };
+
+  const loadMoreProducts = async () => {
+    if (loadingMore || !hasMore) return;
+    
+    setLoadingMore(true);
+    await loadProductos(currentOffset, true);
+    setLoadingMore(false);
   };
 
   // Levenshtein distance for fuzzy matching
@@ -995,7 +1031,7 @@ function App() {
         setResponse(
           JSON.stringify({ mensaje: "¡Producto creado exitosamente!" }, null, 2)
         );
-        loadProductos();
+        loadProductos(0, false);
         setProductForm({
           codigo: "",
           nombre: "",
@@ -1087,7 +1123,7 @@ function App() {
         );
         setCart([]);
         loadCompras();
-        loadProductos();
+        loadProductos(0, false);
         // Clear success message after 3 seconds
         setTimeout(() => setResponse(""), 3000);
       } else {
@@ -1176,62 +1212,13 @@ function App() {
                   loading={loading}
                 />
 
-                <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-lg">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-semibold text-white flex items-center gap-2">
-                      <Icons.Package />
-                      All Products
-                    </h3>
-                    <span className="bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full text-sm font-medium">
-                      {productos.length} total
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {productos.map((product: Product) => (
-                      <div
-                        key={product.codigo}
-                        className="bg-white/5 rounded-xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-200 backdrop-blur-sm group"
-                      >
-                        <h5 className="text-white font-medium mb-2 group-hover:text-blue-400 transition-colors">
-                          {product.nombre}
-                        </h5>
-                        <div className="space-y-1 text-sm mb-4">
-                          <p className="text-slate-400">
-                            Code:{" "}
-                            <span className="text-slate-300">
-                              {product.codigo}
-                            </span>
-                          </p>
-                          <p className="text-emerald-400 font-semibold">
-                            ${product.precio}
-                          </p>
-                          <p className="text-slate-400">
-                            Stock:{" "}
-                            <span
-                              className={
-                                product.cantidad > 0
-                                  ? "text-emerald-400"
-                                  : "text-red-400"
-                              }
-                            >
-                              {product.cantidad}
-                            </span>
-                          </p>
-                          <p className="text-blue-400">{product.categoria}</p>
-                        </div>
-                        <button
-                          onClick={() => addToCart(product)}
-                          disabled={product.cantidad <= 0}
-                          className="w-full bg-emerald-500/20 text-emerald-400 py-2 px-3 rounded-lg text-sm hover:bg-emerald-500/30 transition-all duration-200 flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                        >
-                          <Icons.ShoppingCart />
-                          Add to Cart
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <ProductList
+                  productos={productos}
+                  addToCart={addToCart}
+                  hasMore={hasMore}
+                  loadingMore={loadingMore}
+                  loadMoreProducts={loadMoreProducts}
+                />
               </div>
             )}
 
