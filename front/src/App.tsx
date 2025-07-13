@@ -1,5 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import LandingPage from "./LandingPage";
+import LoginScreen from "./components/LoginScreen";
+import RegisterScreen from "./components/RegisterScreen";
+import type { Product, CartItem, Compra, ProductForm, UserInfo } from "./types";
 
 // API URLs
 const API_URLS = {
@@ -250,239 +253,11 @@ const LoadingSpinner = () => (
   </div>
 );
 
-// Professional Login Screen
-const LoginScreen = ({
-  userId,
-  setUserId,
-  password,
-  setPassword,
-  handleLogin,
-  loading,
-  setCurrentView,
-  response,
-}: any) => (
-  <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
-    <div className="w-full max-w-md">
-      <div className="backdrop-blur-xl bg-white/5 rounded-3xl p-8 shadow-2xl border border-white/10">
-        {/* Back to Landing button */}
-        <div className="mb-4">
-          <button
-            onClick={() => setCurrentView("landing")}
-            className="text-slate-400 hover:text-white transition-colors text-sm flex items-center gap-1"
-          >
-            ← Back to TechStore
-          </button>
-        </div>
-
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-500 to-violet-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
-            <Icons.Lightning />
-          </div>
-          <h1 className="text-3xl font-bold text-white mb-2">TechStore</h1>
-          <p className="text-slate-400 text-sm">
-            Sistema de Gestión Multi-Tenant
-          </p>
-        </div>
-
-        {/* Form */}
-        <div className="space-y-4 mb-6">
-          <div className="relative group">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-400 transition-colors">
-              <Icons.User />
-            </div>
-            <input
-              type="text"
-              placeholder="User ID"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all backdrop-blur-sm"
-            />
-          </div>
-
-          <div className="relative group">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-400 transition-colors">
-              <Icons.Lock />
-            </div>
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all backdrop-blur-sm"
-            />
-          </div>
-        </div>
-
-        {/* Buttons */}
-        <div className="space-y-3 mb-6">
-          <button
-            onClick={handleLogin}
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-blue-600 to-violet-600 text-white py-3 px-4 rounded-xl font-medium hover:from-blue-700 hover:to-violet-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2 shadow-lg"
-          >
-            {loading ? <LoadingSpinner /> : <Icons.Shield />}
-            {loading ? "Authenticating..." : "Sign In"}
-          </button>
-
-          <button
-            onClick={() => setCurrentView("register")}
-            className="w-full bg-white/5 text-white py-3 px-4 rounded-xl font-medium border border-white/20 hover:bg-white/10 transition-all duration-200 flex items-center justify-center gap-2"
-          >
-            <Icons.User />
-            Create Account
-          </button>
-        </div>
-
-        {/* Response */}
-        {response && (
-          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 backdrop-blur-sm">
-            <p className="text-red-400 text-sm font-mono">
-              {JSON.parse(response).mensaje || "Authentication failed"}
-            </p>
-          </div>
-        )}
-      </div>
-    </div>
-  </div>
-);
-
-// Professional Register Screen
-const RegisterScreen = ({
-  userId,
-  setUserId,
-  password,
-  setPassword,
-  name,
-  setName,
-  tenantId,
-  setTenantId,
-  handleCreateUser,
-  loading,
-  setCurrentView,
-  response,
-}: any) => (
-  <div className="min-h-screen bg-gradient-to-br from-slate-950 via-emerald-950 to-slate-950 flex items-center justify-center p-4">
-    <div className="w-full max-w-md">
-      <div className="backdrop-blur-xl bg-white/5 rounded-3xl p-8 shadow-2xl border border-white/10">
-        {/* Back to Landing button */}
-        <div className="mb-4">
-          <button
-            onClick={() => setCurrentView("landing")}
-            className="text-slate-400 hover:text-white transition-colors text-sm flex items-center gap-1"
-          >
-            ← Back to TechStore
-          </button>
-        </div>
-
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-r from-emerald-500 to-blue-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
-            <Icons.User />
-          </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Join Platform</h1>
-          <p className="text-slate-400 text-sm">
-            Create your enterprise account
-          </p>
-        </div>
-
-        {/* Form */}
-        <div className="space-y-4 mb-6">
-          <div className="relative group">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-emerald-400 transition-colors">
-              <Icons.User />
-            </div>
-            <input
-              type="text"
-              placeholder="User ID"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all backdrop-blur-sm"
-            />
-          </div>
-
-          <div className="relative group">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-emerald-400 transition-colors">
-              <Icons.Lock />
-            </div>
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all backdrop-blur-sm"
-            />
-          </div>
-
-          <input
-            type="text"
-            placeholder="Full Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all backdrop-blur-sm"
-          />
-
-          <div className="relative group">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-emerald-400 transition-colors">
-              <Icons.Building />
-            </div>
-            <input
-              type="text"
-              placeholder="Tenant ID (Organization)"
-              value={tenantId}
-              onChange={(e) => setTenantId(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all backdrop-blur-sm"
-            />
-          </div>
-        </div>
-
-        {/* Buttons */}
-        <div className="space-y-3 mb-6">
-          <button
-            onClick={handleCreateUser}
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-emerald-600 to-blue-600 text-white py-3 px-4 rounded-xl font-medium hover:from-emerald-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2 shadow-lg"
-          >
-            {loading ? <LoadingSpinner /> : <Icons.Plus />}
-            {loading ? "Creating Account..." : "Register"}
-          </button>
-
-          <button
-            onClick={() => setCurrentView("login")}
-            className="w-full bg-white/5 text-white py-3 px-4 rounded-xl font-medium border border-white/20 hover:bg-white/10 transition-all duration-200 flex items-center justify-center gap-2"
-          >
-            <Icons.Shield />
-            Back to Login
-          </button>
-        </div>
-
-        {/* Response */}
-        {response && (
-          <div
-            className={`border rounded-xl p-3 backdrop-blur-sm ${
-              response.includes("exitosamente")
-                ? "bg-emerald-500/10 border-emerald-500/20"
-                : "bg-red-500/10 border-red-500/20"
-            }`}
-          >
-            <p
-              className={`text-sm font-mono ${
-                response.includes("exitosamente")
-                  ? "text-emerald-400"
-                  : "text-red-400"
-              }`}
-            >
-              {JSON.parse(response).mensaje || "Registration failed"}
-            </p>
-          </div>
-        )}
-      </div>
-    </div>
-  </div>
-);
-
 // Modern Dashboard Header
-const DashboardHeader = ({ userInfo, handleLogout }: any) => (
+const DashboardHeader: React.FC<{
+  userInfo: UserInfo;
+  handleLogout: () => void;
+}> = ({ userInfo, handleLogout }) => (
   <header className="bg-white/5 backdrop-blur-xl border-b border-white/10 sticky top-0 z-40">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="flex justify-between items-center h-16">
@@ -514,7 +289,10 @@ const DashboardHeader = ({ userInfo, handleLogout }: any) => (
 );
 
 // Modern Navigation Tabs
-const NavigationTabs = ({ activeTab, setActiveTab }: any) => (
+const NavigationTabs: React.FC<{
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+}> = ({ activeTab, setActiveTab }) => (
   <nav className="bg-white/5 backdrop-blur-xl border-b border-white/10">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="flex space-x-8">
@@ -546,13 +324,19 @@ const NavigationTabs = ({ activeTab, setActiveTab }: any) => (
 );
 
 // Modern Search Section
-const SearchSection = ({
+const SearchSection: React.FC<{
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+  filteredProducts: Product[];
+  setSelectedProduct: (product: Product | null) => void;
+  addToCart: (product: Product, quantity?: number) => void;
+}> = ({
   searchTerm,
   setSearchTerm,
   filteredProducts,
   setSelectedProduct,
   addToCart,
-}: any) => (
+}) => (
   <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-lg">
     <div className="mb-6">
       <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
@@ -583,7 +367,7 @@ const SearchSection = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredProducts.map((product: any) => (
+          {filteredProducts.map((product: Product) => (
             <div
               key={product.codigo}
               className="bg-white/5 rounded-xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-200 backdrop-blur-sm group"
@@ -637,12 +421,12 @@ const SearchSection = ({
 );
 
 // Modern Product Form
-const ProductForm = ({
-  productForm,
-  setProductForm,
-  createProduct,
-  loading,
-}: any) => (
+const ProductForm: React.FC<{
+  productForm: ProductForm;
+  setProductForm: (form: ProductForm) => void;
+  createProduct: () => void;
+  loading: boolean;
+}> = ({ productForm, setProductForm, createProduct, loading }) => (
   <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-lg">
     <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
       <Icons.Package />
@@ -714,13 +498,19 @@ const ProductForm = ({
 );
 
 // Modern Cart Section
-const CartSection = ({
+const CartSection: React.FC<{
+  cart: CartItem[];
+  updateCartQuantity: (codigo: string, newQuantity: number) => void;
+  removeFromCart: (codigo: string) => void;
+  realizarCompra: () => void;
+  loading: boolean;
+}> = ({
   cart,
   updateCartQuantity,
   removeFromCart,
   realizarCompra,
   loading,
-}: any) => (
+}) => (
   <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-lg">
     <div className="flex items-center justify-between mb-6">
       <h3 className="text-xl font-semibold text-white flex items-center gap-2">
@@ -743,7 +533,7 @@ const CartSection = ({
     ) : (
       <div className="space-y-4">
         <div className="space-y-3">
-          {cart.map((item: any) => (
+          {cart.map((item: CartItem) => (
             <div
               key={item.codigo}
               className="bg-white/5 rounded-xl p-4 border border-white/10 backdrop-blur-sm"
@@ -805,7 +595,8 @@ const CartSection = ({
               $
               {cart
                 .reduce(
-                  (sum: number, item: any) => sum + item.precio * item.cantidad,
+                  (sum: number, item: CartItem) =>
+                    sum + item.precio * item.cantidad,
                   0
                 )
                 .toFixed(2)}
@@ -826,7 +617,7 @@ const CartSection = ({
 );
 
 // Modern Purchases Section
-const ComprasSection = ({ compras }: any) => (
+const ComprasSection: React.FC<{ compras: Compra[] }> = ({ compras }) => (
   <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-lg">
     <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
       <Icons.Receipt />
@@ -843,7 +634,7 @@ const ComprasSection = ({ compras }: any) => (
       </div>
     ) : (
       <div className="space-y-4">
-        {compras.map((compra: any, index: number) => (
+        {compras.map((compra: Compra, index: number) => (
           <div
             key={compra.compra_id || index}
             className="bg-white/5 rounded-xl p-4 border border-white/10 backdrop-blur-sm"
@@ -856,7 +647,7 @@ const ComprasSection = ({ compras }: any) => (
             </div>
 
             <div className="space-y-2">
-              {compra.productos?.map((producto: any, i: number) => (
+              {compra.productos?.map((producto, i: number) => (
                 <div
                   key={i}
                   className="flex justify-between items-center text-sm"
@@ -882,7 +673,10 @@ function App() {
   const [currentView, setCurrentView] = useState("landing");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [token, setToken] = useState("");
-  const [userInfo, setUserInfo] = useState({ user_id: "", tenant_id: "" });
+  const [userInfo, setUserInfo] = useState<UserInfo>({
+    user_id: "",
+    tenant_id: "",
+  });
 
   // User form states
   const [userId, setUserId] = useState("user_test_postman");
@@ -891,11 +685,11 @@ function App() {
   const [tenantId, setTenantId] = useState("empresa_postman");
 
   // Product states
-  const [productos, setProductos] = useState<any[]>([]);
+  const [productos, setProductos] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [productForm, setProductForm] = useState({
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [productForm, setProductForm] = useState<ProductForm>({
     codigo: "",
     nombre: "",
     descripcion: "",
@@ -905,8 +699,8 @@ function App() {
   });
 
   // Shopping cart states
-  const [cart, setCart] = useState<any[]>([]);
-  const [compras, setCompras] = useState<any[]>([]);
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [compras, setCompras] = useState<Compra[]>([]);
 
   // General states
   const [loading, setLoading] = useState(false);
@@ -916,6 +710,7 @@ function App() {
   // Authentication functions
   const handleCreateUser = async () => {
     setLoading(true);
+    setResponse(""); // Clear previous messages
     try {
       const res = await fetch(`${API_URLS.MS1}/usuarios/crear`, {
         method: "POST",
@@ -929,19 +724,42 @@ function App() {
           tenant_id: tenantId,
         }),
       });
+
       const data = await res.json();
-      setResponse(JSON.stringify(data, null, 2));
-      if (data.mensaje?.includes("exitosamente")) {
-        setTimeout(() => setCurrentView("login"), 2000);
+
+      // Check if the registration was successful
+      if (
+        res.ok &&
+        (data.mensaje?.includes("exitosamente") ||
+          data.mensaje?.includes("creado"))
+      ) {
+        setResponse(
+          JSON.stringify(
+            { mensaje: "¡Usuario registrado exitosamente!" },
+            null,
+            2
+          )
+        );
+        setTimeout(() => {
+          setResponse(""); // Clear message before switching views
+          setCurrentView("login");
+        }, 2000);
+      } else {
+        // Show error message
+        const errorMsg = data.mensaje || data.error || "Error en el registro";
+        setResponse(JSON.stringify({ mensaje: errorMsg }, null, 2));
       }
     } catch (error) {
-      setResponse(`Error: ${error}`);
+      setResponse(
+        JSON.stringify({ mensaje: `Error de conexión: ${error}` }, null, 2)
+      );
     }
     setLoading(false);
   };
 
   const handleLogin = async () => {
     setLoading(true);
+    setResponse(""); // Clear previous messages
     try {
       const res = await fetch(`${API_URLS.MS1}/usuarios/login`, {
         method: "POST",
@@ -953,17 +771,27 @@ function App() {
           password: password,
         }),
       });
+
       const data = await res.json();
-      if (data.token) {
+
+      // Check if login was successful
+      if (res.ok && data.token) {
         setToken(data.token);
         setUserInfo({ user_id: data.user_id, tenant_id: data.tenant_id });
         setIsAuthenticated(true);
         setCurrentView("dashboard");
         loadProductos();
+        // Don't show response for successful login
+      } else {
+        // Show error message
+        const errorMsg =
+          data.mensaje || data.error || "Credenciales incorrectas";
+        setResponse(JSON.stringify({ mensaje: errorMsg }, null, 2));
       }
-      setResponse(JSON.stringify(data, null, 2));
     } catch (error) {
-      setResponse(`Error: ${error}`);
+      setResponse(
+        JSON.stringify({ mensaje: `Error de conexión: ${error}` }, null, 2)
+      );
     }
     setLoading(false);
   };
@@ -1019,106 +847,127 @@ function App() {
   };
 
   // Advanced fuzzy search
-  const fuzzyMatch = (
-    searchTerm: string,
-    targetText: string,
-    threshold: number = 0.7
-  ): boolean => {
-    if (!targetText) return false;
+  const fuzzyMatch = useCallback(
+    (
+      searchTerm: string,
+      targetText: string,
+      threshold: number = 0.7
+    ): boolean => {
+      if (!targetText) return false;
 
-    const searchLower = searchTerm.toLowerCase();
-    const targetLower = targetText.toLowerCase();
+      const searchLower = searchTerm.toLowerCase();
+      const targetLower = targetText.toLowerCase();
 
-    if (targetLower.includes(searchLower)) return true;
+      if (targetLower.includes(searchLower)) return true;
 
-    const searchWords = searchLower.split(" ").filter((w) => w.length > 2);
-    const targetWords = targetLower.split(" ");
+      const searchWords = searchLower.split(" ").filter((w) => w.length > 2);
+      const targetWords = targetLower.split(" ");
 
-    for (const searchWord of searchWords) {
-      for (const targetWord of targetWords) {
-        if (searchWord.length <= 3) {
-          if (targetWord.includes(searchWord)) return true;
-          continue;
-        }
+      for (const searchWord of searchWords) {
+        for (const targetWord of targetWords) {
+          if (searchWord.length <= 3) {
+            if (targetWord.includes(searchWord)) return true;
+            continue;
+          }
 
-        const distance = levenshteinDistance(searchWord, targetWord);
-        const similarity =
-          1 - distance / Math.max(searchWord.length, targetWord.length);
+          const distance = levenshteinDistance(searchWord, targetWord);
+          const similarity =
+            1 - distance / Math.max(searchWord.length, targetWord.length);
 
-        if (similarity >= threshold) return true;
+          if (similarity >= threshold) return true;
 
-        if (targetWord.length >= searchWord.length) {
-          for (let i = 0; i <= targetWord.length - searchWord.length; i++) {
-            const substring = targetWord.substring(i, i + searchWord.length);
-            const subDistance = levenshteinDistance(searchWord, substring);
-            const subSimilarity = 1 - subDistance / searchWord.length;
-            if (subSimilarity >= threshold) return true;
+          if (targetWord.length >= searchWord.length) {
+            for (let i = 0; i <= targetWord.length - searchWord.length; i++) {
+              const substring = targetWord.substring(i, i + searchWord.length);
+              const subDistance = levenshteinDistance(searchWord, substring);
+              const subSimilarity = 1 - subDistance / searchWord.length;
+              if (subSimilarity >= threshold) return true;
+            }
           }
         }
       }
-    }
-
-    return false;
-  };
-
-  const searchProducts = (term: string) => {
-    if (!term) {
-      setFilteredProducts(productos);
-      return;
-    }
-
-    const termLower = term.toLowerCase();
-
-    const filtered = productos.filter((p: any) => {
-      if (
-        p.nombre?.toLowerCase().includes(termLower) ||
-        p.descripcion?.toLowerCase().includes(termLower) ||
-        p.categoria?.toLowerCase().includes(termLower) ||
-        p.codigo?.toLowerCase().includes(termLower)
-      ) {
-        return true;
-      }
-
-      if (
-        fuzzyMatch(termLower, p.nombre, 0.6) ||
-        fuzzyMatch(termLower, p.descripcion, 0.7) ||
-        fuzzyMatch(termLower, p.categoria, 0.7) ||
-        fuzzyMatch(termLower, p.codigo, 0.8)
-      ) {
-        return true;
-      }
-
-      const words = termLower.split(" ").filter((w) => w.length > 1);
-      if (words.length > 1) {
-        return words.every(
-          (word: string) =>
-            p.nombre?.toLowerCase().includes(word) ||
-            p.descripcion?.toLowerCase().includes(word) ||
-            p.categoria?.toLowerCase().includes(word)
-        );
-      }
 
       return false;
-    });
+    },
+    []
+  );
 
-    filtered.sort((a: any, b: any) => {
-      const aExactScore =
-        (a.nombre?.toLowerCase().includes(termLower) ? 2 : 0) +
-        (a.descripcion?.toLowerCase().includes(termLower) ? 1 : 0) +
-        (a.categoria?.toLowerCase().includes(termLower) ? 1 : 0) +
-        (a.codigo?.toLowerCase().includes(termLower) ? 3 : 0);
+  const searchProducts = useCallback(
+    (term: string) => {
+      if (!term) {
+        setFilteredProducts(productos);
+        return;
+      }
 
-      const bExactScore =
-        (b.nombre?.toLowerCase().includes(termLower) ? 2 : 0) +
-        (b.descripcion?.toLowerCase().includes(termLower) ? 1 : 0) +
-        (b.categoria?.toLowerCase().includes(termLower) ? 1 : 0) +
-        (b.codigo?.toLowerCase().includes(termLower) ? 3 : 0);
+      const termLower = term.toLowerCase();
 
-      return bExactScore - aExactScore;
-    });
+      const filtered = productos.filter((p: Product) => {
+        if (
+          p.nombre?.toLowerCase().includes(termLower) ||
+          p.descripcion?.toLowerCase().includes(termLower) ||
+          p.categoria?.toLowerCase().includes(termLower) ||
+          p.codigo?.toLowerCase().includes(termLower)
+        ) {
+          return true;
+        }
 
-    setFilteredProducts(filtered);
-  };
+        if (
+          fuzzyMatch(termLower, p.nombre, 0.6) ||
+          fuzzyMatch(termLower, p.descripcion, 0.7) ||
+          fuzzyMatch(termLower, p.categoria, 0.7) ||
+          fuzzyMatch(termLower, p.codigo, 0.8)
+        ) {
+          return true;
+        }
+
+        const words = termLower.split(" ").filter((w) => w.length > 1);
+        if (words.length > 1) {
+          return words.every(
+            (word: string) =>
+              p.nombre?.toLowerCase().includes(word) ||
+              p.descripcion?.toLowerCase().includes(word) ||
+              p.categoria?.toLowerCase().includes(word)
+          );
+        }
+
+        return false;
+      });
+
+      filtered.sort((a: Product, b: Product) => {
+        const aExactScore =
+          (a.nombre?.toLowerCase().includes(termLower) ? 2 : 0) +
+          (a.descripcion?.toLowerCase().includes(termLower) ? 1 : 0) +
+          (a.categoria?.toLowerCase().includes(termLower) ? 1 : 0) +
+          (a.codigo?.toLowerCase().includes(termLower) ? 3 : 0);
+
+        const bExactScore =
+          (b.nombre?.toLowerCase().includes(termLower) ? 2 : 0) +
+          (b.descripcion?.toLowerCase().includes(termLower) ? 1 : 0) +
+          (b.categoria?.toLowerCase().includes(termLower) ? 1 : 0) +
+          (b.codigo?.toLowerCase().includes(termLower) ? 3 : 0);
+
+        return bExactScore - aExactScore;
+      });
+
+      setFilteredProducts(filtered);
+    },
+    [productos, fuzzyMatch]
+  );
+
+  const loadCompras = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_URLS.MS3}/compras/listar`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await res.json();
+      setCompras(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Error loading purchases:", error);
+    }
+  }, [token]);
 
   const createProduct = async () => {
     setLoading(true);
@@ -1135,9 +984,17 @@ function App() {
           cantidad: parseInt(productForm.cantidad),
         }),
       });
+
       const data = await res.json();
-      setResponse(JSON.stringify(data, null, 2));
-      if (data.mensaje?.includes("exitosamente")) {
+
+      if (
+        res.ok &&
+        (data.mensaje?.includes("exitosamente") ||
+          data.mensaje?.includes("creado"))
+      ) {
+        setResponse(
+          JSON.stringify({ mensaje: "¡Producto creado exitosamente!" }, null, 2)
+        );
         loadProductos();
         setProductForm({
           codigo: "",
@@ -1147,20 +1004,28 @@ function App() {
           cantidad: "",
           categoria: "",
         });
+        // Clear success message after 3 seconds
+        setTimeout(() => setResponse(""), 3000);
+      } else {
+        const errorMsg =
+          data.mensaje || data.error || "Error al crear producto";
+        setResponse(JSON.stringify({ mensaje: errorMsg }, null, 2));
       }
     } catch (error) {
-      setResponse(`Error: ${error}`);
+      setResponse(
+        JSON.stringify({ mensaje: `Error de conexión: ${error}` }, null, 2)
+      );
     }
     setLoading(false);
   };
 
-  const addToCart = (product: any, quantity = 1) => {
+  const addToCart = (product: Product, quantity = 1) => {
     const existingItem = cart.find(
-      (item: any) => item.codigo === product.codigo
+      (item: CartItem) => item.codigo === product.codigo
     );
     if (existingItem) {
       setCart(
-        cart.map((item: any) =>
+        cart.map((item: CartItem) =>
           item.codigo === product.codigo
             ? { ...item, cantidad: item.cantidad + quantity }
             : item
@@ -1172,7 +1037,7 @@ function App() {
   };
 
   const removeFromCart = (codigo: string) => {
-    setCart(cart.filter((item: any) => item.codigo !== codigo));
+    setCart(cart.filter((item: CartItem) => item.codigo !== codigo));
   };
 
   const updateCartQuantity = (codigo: string, newQuantity: number) => {
@@ -1180,7 +1045,7 @@ function App() {
       removeFromCart(codigo);
     } else {
       setCart(
-        cart.map((item: any) =>
+        cart.map((item: CartItem) =>
           item.codigo === codigo ? { ...item, cantidad: newQuantity } : item
         )
       );
@@ -1199,50 +1064,55 @@ function App() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          productos: cart.map((item: any) => ({
+          productos: cart.map((item: CartItem) => ({
             codigo: item.codigo,
             cantidad: item.cantidad,
           })),
         }),
       });
+
       const data = await res.json();
-      setResponse(JSON.stringify(data, null, 2));
-      if (data.mensaje?.includes("registrada")) {
+
+      if (
+        res.ok &&
+        (data.mensaje?.includes("registrada") ||
+          data.mensaje?.includes("exitosamente"))
+      ) {
+        setResponse(
+          JSON.stringify(
+            { mensaje: "¡Compra realizada exitosamente!" },
+            null,
+            2
+          )
+        );
         setCart([]);
         loadCompras();
         loadProductos();
+        // Clear success message after 3 seconds
+        setTimeout(() => setResponse(""), 3000);
+      } else {
+        const errorMsg =
+          data.mensaje || data.error || "Error al procesar la compra";
+        setResponse(JSON.stringify({ mensaje: errorMsg }, null, 2));
       }
     } catch (error) {
-      setResponse(`Error: ${error}`);
+      setResponse(
+        JSON.stringify({ mensaje: `Error de conexión: ${error}` }, null, 2)
+      );
     }
     setLoading(false);
-  };
-
-  const loadCompras = async () => {
-    try {
-      const res = await fetch(`${API_URLS.MS3}/compras/listar`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      const data = await res.json();
-      setCompras(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error("Error loading purchases:", error);
-    }
   };
 
   // Effects
   useEffect(() => {
     searchProducts(searchTerm);
-  }, [searchTerm, productos]);
+  }, [searchTerm, searchProducts]);
 
   useEffect(() => {
     if (isAuthenticated) {
       loadCompras();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, loadCompras]);
 
   // Main render
   return (
@@ -1260,6 +1130,7 @@ function App() {
           handleLogin={handleLogin}
           loading={loading}
           setCurrentView={setCurrentView}
+          setResponse={setResponse}
           response={response}
         />
       )}
@@ -1277,6 +1148,7 @@ function App() {
           handleCreateUser={handleCreateUser}
           loading={loading}
           setCurrentView={setCurrentView}
+          setResponse={setResponse}
           response={response}
         />
       )}
@@ -1316,7 +1188,7 @@ function App() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {productos.map((product: any) => (
+                    {productos.map((product: Product) => (
                       <div
                         key={product.codigo}
                         className="bg-white/5 rounded-xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-200 backdrop-blur-sm group"
