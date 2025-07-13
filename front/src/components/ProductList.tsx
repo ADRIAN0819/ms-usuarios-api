@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Product } from '../types';
 
 interface ProductListProps {
@@ -7,6 +7,13 @@ interface ProductListProps {
   hasMore: boolean;
   loadingMore: boolean;
   loadMoreProducts: () => void;
+}
+
+interface Toast {
+  id: string;
+  message: string;
+  productName: string;
+  type: 'success' | 'error';
 }
 
 const Icons = {
@@ -55,6 +62,36 @@ const Icons = {
       />
     </svg>
   ),
+  Check: () => (
+    <svg
+      className="w-4 h-4"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M5 13l4 4L19 7"
+      />
+    </svg>
+  ),
+  X: () => (
+    <svg
+      className="w-4 h-4"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M6 18L18 6M6 6l12 12"
+      />
+    </svg>
+  ),
 };
 
 const LoadingSpinner = () => (
@@ -63,6 +100,42 @@ const LoadingSpinner = () => (
   </div>
 );
 
+// Toast Component
+const Toast: React.FC<{ 
+  toast: Toast; 
+  onRemove: (id: string) => void;
+}> = ({ toast, onRemove }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onRemove(toast.id);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [toast.id, onRemove]);
+
+  return (
+    <div className="bg-gradient-to-r from-emerald-500 to-green-500 backdrop-blur-xl rounded-xl p-4 border border-emerald-400/50 shadow-2xl shadow-emerald-500/20 max-w-sm animate-bounce-in">
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center animate-pulse">
+          <Icons.Check />
+        </div>
+        <div className="flex-1">
+          <p className="text-white font-semibold text-sm">✨ Added to Cart!</p>
+          <p className="text-emerald-100 text-xs mt-1 truncate">
+            {toast.productName}
+          </p>
+        </div>
+        <button
+          onClick={() => onRemove(toast.id)}
+          className="text-emerald-200 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
+        >
+          <Icons.X />
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const ProductList: React.FC<ProductListProps> = ({
   productos,
   addToCart,
@@ -70,6 +143,32 @@ const ProductList: React.FC<ProductListProps> = ({
   loadingMore,
   loadMoreProducts,
 }) => {
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [addingToCart, setAddingToCart] = useState<string | null>(null);
+
+  const handleAddToCart = async (product: Product) => {
+    setAddingToCart(product.codigo);
+    
+    // Simulate a brief loading state for better UX
+    setTimeout(() => {
+      addToCart(product);
+      
+      // Add toast notification
+      const newToast: Toast = {
+        id: Date.now().toString(),
+        message: 'Added to cart!',
+        productName: product.nombre,
+        type: 'success'
+      };
+      
+      setToasts(prev => [...prev, newToast]);
+      setAddingToCart(null);
+    }, 300);
+  };
+
+  const removeToast = (id: string) => {
+    setToasts(prev => prev.filter(toast => toast.id !== id));
+  };
   return (
     <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-lg">
       <div className="flex items-center justify-between mb-6">
@@ -86,7 +185,9 @@ const ProductList: React.FC<ProductListProps> = ({
         {productos.map((product: Product) => (
           <div
             key={product.codigo}
-            className="bg-white/5 rounded-xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-200 backdrop-blur-sm group"
+            className={`bg-white/5 rounded-xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 backdrop-blur-sm group ${
+              addingToCart === product.codigo ? 'ring-2 ring-emerald-500/50 bg-emerald-500/5' : ''
+            }`}
           >
             <h5 className="text-white font-medium mb-2 group-hover:text-blue-400 transition-colors">
               {product.nombre}
@@ -116,12 +217,25 @@ const ProductList: React.FC<ProductListProps> = ({
               <p className="text-blue-400">{product.categoria}</p>
             </div>
             <button
-              onClick={() => addToCart(product)}
-              disabled={product.cantidad <= 0}
-              className="w-full bg-emerald-500/20 text-emerald-400 py-2 px-3 rounded-lg text-sm hover:bg-emerald-500/30 transition-all duration-200 flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+              onClick={() => handleAddToCart(product)}
+              disabled={product.cantidad <= 0 || addingToCart === product.codigo}
+              className={`w-full py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed btn-cart ${
+                addingToCart === product.codigo
+                  ? 'bg-emerald-500/40 text-emerald-300 animate-pulse'
+                  : 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/20 hover:scale-105 active:scale-95'
+              }`}
             >
-              <Icons.ShoppingCart />
-              Add to Cart
+              {addingToCart === product.codigo ? (
+                <>
+                  <LoadingSpinner />
+                  Adding...
+                </>
+              ) : (
+                <>
+                  <Icons.ShoppingCart />
+                  Add to Cart
+                </>
+              )}
             </button>
           </div>
         ))}
@@ -149,6 +263,24 @@ const ProductList: React.FC<ProductListProps> = ({
           </button>
         </div>
       )}
+
+      {/* Toast Notifications */}
+      <div className="fixed top-4 right-4 z-50 space-y-3">
+        {toasts.map((toast, index) => (
+          <div
+            key={toast.id}
+            className="animate-slide-in"
+            style={{
+              animationDelay: `${index * 0.1}s`
+            }}
+          >
+            <Toast
+              toast={toast}
+              onRemove={removeToast}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
