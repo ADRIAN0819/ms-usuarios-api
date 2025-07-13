@@ -1,64 +1,121 @@
-const AWS = require('aws-sdk');
-const { validarToken } = require('../middleware/validarToken');
-const dynamodb = new AWS.DynamoDB.DocumentClient();
-const s3 = new AWS.S3();
+// Usando AWS SDK v3 - Mejores prácticas 2025
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  GetCommand,
+  DeleteCommand,
+} from "@aws-sdk/lib-dynamodb";
 
-module.exports.eliminarProducto = async (event) => {
-  // Validamos el token
-  const validacion = await validarToken(event.headers);
-  if (!validacion.ok) return validacion.respuesta;
+// Inicializar cliente fuera del handler para reutilización
+const dynamoClient = new DynamoDBClient();
+const docClient = DynamoDBDocumentClient.from(dynamoClient);
 
-  const userId = validacion.datos.user_id;
+// Headers CORS según estándares 2025
+const corsHeaders = {
+  "Content-Type": "application/json",
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+};
 
-  const { codigo } = JSON.parse(event.body);
+export const eliminarProducto = async (event) => {
+  console.log("Evento recibido:", JSON.stringify(event, null, 2));
 
-  // Primero obtenemos el producto
-  const obtenerParams = {
-    TableName: process.env.PRODUCTOS_TABLE,
-    Key: { codigo }
-  };
-
-  const resultado = await dynamodb.get(obtenerParams).promise();
-
-  if (!resultado.Item) {
+  // Manejar requests OPTIONS para CORS preflight
+  if (event.httpMethod === "OPTIONS") {
     return {
-      statusCode: 404,
-      body: JSON.stringify({ msg: 'Producto no encontrado' })
+      statusCode: 200,
+      headers: corsHeaders,
+      body: JSON.stringify({ message: "CORS preflight OK" }),
     };
   }
 
-  // Verificamos si el producto pertenece al usuario
-  if (resultado.Item.user_id !== userId) {
-    return {
-      statusCode: 403,
-      body: JSON.stringify({ msg: 'No tienes permiso para eliminar este producto' })
-    };
-  }
-
-  // Si existe imagen_key, eliminamos la imagen del bucket S3
-  if (resultado.Item.imagen_key) {
-    const s3Params = {
-      Bucket: process.env.IMAGENES_BUCKET,
-      Key: resultado.Item.imagen_key
-    };
-
-    try {
-      await s3.deleteObject(s3Params).promise();
-    } catch (err) {
-      console.warn("Error al eliminar imagen S3 (continuando de todos modos):", err.message);
+  try {
+    // Acceder a variables de entorno de forma segura
+    const tableName = process.env.PRODUCTOS_TABLE;
+    if (!tableName) {
+      throw new Error("PRODUCTOS_TABLE environment variable is not set");
     }
+
+    // Parsear el body del request
+    if (!event.body) {
+      return {
+        statusCode: 400,
+        headers: corsHeaders,
+        body: JSON.stringify({
+          mensaje: "Body del request requerido",
+        }),
+      };
+    }
+
+    const { codigo } = JSON.parse(event.body);
+
+    // Validar que el código esté presente
+    if (!codigo) {
+      return {
+        statusCode: 400,
+        headers: corsHeaders,
+        body: JSON.stringify({
+          mensaje: "Código de producto requerido",
+        }),
+      };
+    }
+
+    // Verificar que el producto existe y es del Grupo 3 antes de eliminarlo
+    const getCommand = new GetCommand({
+      TableName: tableName,
+      Key: { codigo },
+    });
+
+    const existingData = await docClient.send(getCommand);
+
+    if (!existingData.Item) {
+      return {
+        statusCode: 404,
+        headers: corsHeaders,
+        body: JSON.stringify({
+          mensaje: "Producto no encontrado",
+        }),
+      };
+    }
+
+    if (existingData.Item.tenant_id !== "grupo3") {
+      return {
+        statusCode: 403,
+        headers: corsHeaders,
+        body: JSON.stringify({
+          mensaje: "No autorizado para eliminar este producto",
+        }),
+      };
+    }
+
+    // Usar AWS SDK v3 command pattern para eliminar
+    const deleteCommand = new DeleteCommand({
+      TableName: tableName,
+      Key: { codigo },
+      ReturnValues: "ALL_OLD",
+    });
+
+    const result = await docClient.send(deleteCommand);
+
+    return {
+      statusCode: 200,
+      headers: corsHeaders,
+      body: JSON.stringify({
+        mensaje: "Producto eliminado exitosamente - Grupo 3",
+        productoEliminado: result.Attributes,
+      }),
+    };
+  } catch (error) {
+    console.error("Error al eliminar producto:", error);
+    return {
+      statusCode: 500,
+      headers: corsHeaders,
+      body: JSON.stringify({
+        mensaje: "Error al eliminar producto",
+        detalle: error.message,
+      }),
+    };
   }
-
-  // Eliminamos el producto de DynamoDB
-  const eliminarParams = {
-    TableName: process.env.PRODUCTOS_TABLE,
-    Key: { codigo }
-  };
-
-  await dynamodb.delete(eliminarParams).promise();
-
-  return {
-    statusCode: 200,
-    body: JSON.stringify({ msg: 'Producto eliminado exitosamente' })
-  };
 };

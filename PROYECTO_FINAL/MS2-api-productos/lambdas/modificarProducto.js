@@ -1,117 +1,133 @@
-const AWS = require('aws-sdk');
-const { validarToken } = require('../middleware/validarToken');
-const dynamodb = new AWS.DynamoDB.DocumentClient();
-const s3 = new AWS.S3();
+// Usando AWS SDK v3 - Mejores prácticas 2025
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  GetCommand,
+  PutCommand,
+} from "@aws-sdk/lib-dynamodb";
 
-module.exports.modificarProducto = async (event) => {
-  const validacion = await validarToken(event.headers);
-  if (!validacion.ok) return validacion.respuesta;
+// Inicializar cliente fuera del handler para reutilización
+const dynamoClient = new DynamoDBClient();
+const docClient = DynamoDBDocumentClient.from(dynamoClient);
 
-  const userId = validacion.datos.user_id;
-  const { codigo, nombre, descripcion, precio, cantidad, imagen_base64 } = JSON.parse(event.body);
+// Headers CORS según estándares 2025
+const corsHeaders = {
+  "Content-Type": "application/json",
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+};
 
-  const tableName = process.env.PRODUCTOS_TABLE;
-  const bucketName = process.env.IMAGENES_BUCKET;
+export const modificarProducto = async (event) => {
+  console.log("Evento recibido:", JSON.stringify(event, null, 2));
 
-  // Verificar existencia y dueño
-  const resultado = await dynamodb.get({
-    TableName: tableName,
-    Key: { codigo }
-  }).promise();
-
-  if (!resultado.Item) {
+  // Manejar requests OPTIONS para CORS preflight
+  if (event.httpMethod === "OPTIONS") {
     return {
-      statusCode: 404,
-      body: JSON.stringify({ msg: 'Producto no encontrado' })
+      statusCode: 200,
+      headers: corsHeaders,
+      body: JSON.stringify({ message: "CORS preflight OK" }),
     };
   }
 
-  if (resultado.Item.user_id !== userId) {
-    return {
-      statusCode: 403,
-      body: JSON.stringify({ msg: 'No tienes permiso para modificar este producto' })
-    };
-  }
-
-  // Construcción dinámica de UpdateExpression
-  let updateExpression = 'set';
-  const expressionAttributeValues = {};
-  const expressionAttributeNames = {};
-
-  if (nombre !== undefined) {
-    updateExpression += ' #n = :n,';
-    expressionAttributeNames['#n'] = 'nombre';
-    expressionAttributeValues[':n'] = nombre;
-  }
-
-  if (descripcion !== undefined) {
-    updateExpression += ' descripcion = :d,';
-    expressionAttributeValues[':d'] = descripcion;
-  }
-
-  if (precio !== undefined) {
-    updateExpression += ' precio = :p,';
-    expressionAttributeValues[':p'] = precio;
-  }
-
-  if (cantidad !== undefined) {
-    updateExpression += ' cantidad = :c,';
-    expressionAttributeValues[':c'] = cantidad;
-  }
-
-  if (imagen_base64) {
-    if (resultado.Item.imagen_key) {
-      try {
-        await s3.deleteObject({
-          Bucket: bucketName,
-          Key: resultado.Item.imagen_key
-        }).promise();
-      } catch (err) {
-        console.warn('Error al borrar imagen anterior:', err.message);
-      }
+  try {
+    // Acceder a variables de entorno de forma segura
+    const tableName = process.env.PRODUCTOS_TABLE;
+    if (!tableName) {
+      throw new Error("PRODUCTOS_TABLE environment variable is not set");
     }
 
-    const imagen_key = `${codigo}.jpeg`;
-    const buffer = Buffer.from(imagen_base64, 'base64');
+    // Parsear el body del request
+    if (!event.body) {
+      return {
+        statusCode: 400,
+        headers: corsHeaders,
+        body: JSON.stringify({
+          mensaje: "Body del request requerido",
+        }),
+      };
+    }
 
-    await s3.putObject({
-      Bucket: bucketName,
-      Key: imagen_key,
-      Body: buffer,
-      ContentEncoding: 'base64',
-      ContentType: 'image/jpeg'
-    }).promise();
+    const { codigo, nombre, descripcion, precio, cantidad } = JSON.parse(
+      event.body
+    );
 
-    updateExpression += ' imagen_key = :img,';
-    expressionAttributeValues[':img'] = imagen_key;
-  }
+    // Validar campo requerido
+    if (!codigo) {
+      return {
+        statusCode: 400,
+        headers: corsHeaders,
+        body: JSON.stringify({
+          mensaje: "Código de producto requerido",
+        }),
+      };
+    }
 
-  // Si no hay nada para actualizar
-  if (updateExpression === 'set') {
+    // Verificar que el producto existe
+    const getCommand = new GetCommand({
+      TableName: tableName,
+      Key: { codigo },
+    });
+
+    const existingProduct = await docClient.send(getCommand);
+
+    if (!existingProduct.Item) {
+      return {
+        statusCode: 404,
+        headers: corsHeaders,
+        body: JSON.stringify({
+          mensaje: "Producto no encontrado",
+        }),
+      };
+    }
+
+    // Verificar que pertenece al Grupo 3
+    if (existingProduct.Item.tenant_id !== "grupo3") {
+      return {
+        statusCode: 403,
+        headers: corsHeaders,
+        body: JSON.stringify({
+          mensaje: "No autorizado para modificar este producto",
+        }),
+      };
+    }
+
+    // Construir producto actualizado
+    const productoActualizado = {
+      ...existingProduct.Item,
+      ...(nombre && { nombre }),
+      ...(descripcion !== undefined && { descripcion }),
+      ...(precio && { precio: parseFloat(precio) }),
+      ...(cantidad !== undefined && { cantidad: parseInt(cantidad) }),
+      fechaModificacion: new Date().toISOString(),
+    };
+
+    // Usar AWS SDK v3 command pattern para actualizar
+    const putCommand = new PutCommand({
+      TableName: tableName,
+      Item: productoActualizado,
+    });
+
+    await docClient.send(putCommand);
+
     return {
-      statusCode: 400,
-      body: JSON.stringify({ msg: 'No se enviaron campos válidos para actualizar' })
+      statusCode: 200,
+      headers: corsHeaders,
+      body: JSON.stringify({
+        mensaje: "Producto modificado exitosamente - Grupo 3",
+        producto: productoActualizado,
+      }),
+    };
+  } catch (error) {
+    console.error("Error al modificar producto:", error);
+    return {
+      statusCode: 500,
+      headers: corsHeaders,
+      body: JSON.stringify({
+        mensaje: "Error al modificar producto",
+        detalle: error.message,
+      }),
     };
   }
-
-  // Eliminar coma final
-  updateExpression = updateExpression.slice(0, -1);
-
-  const params = {
-    TableName: tableName,
-    Key: { codigo },
-    UpdateExpression: updateExpression,
-    ExpressionAttributeValues: expressionAttributeValues
-  };
-
-  if (Object.keys(expressionAttributeNames).length > 0) {
-    params.ExpressionAttributeNames = expressionAttributeNames;
-  }
-
-  await dynamodb.update(params).promise();
-
-  return {
-    statusCode: 200,
-    body: JSON.stringify({ msg: 'Producto actualizado exitosamente' })
-  };
 };

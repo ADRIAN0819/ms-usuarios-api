@@ -1,67 +1,102 @@
-const AWS = require('aws-sdk');
-const dynamodb = new AWS.DynamoDB.DocumentClient();
-const s3 = new AWS.S3();
-const { validarToken } = require('../middleware/validarToken');
+// Usando AWS SDK v3 - Mejores prácticas 2025
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
 
-module.exports.crearProducto = async (event) => {
-  const validacion = await validarToken(event.headers);
-  if (!validacion.ok) return validacion.respuesta;
-  
-  const { codigo, nombre, descripcion, precio, cantidad, imagen_base64 } = JSON.parse(event.body);
+// Inicializar cliente fuera del handler para reutilización
+const dynamoClient = new DynamoDBClient();
+const docClient = DynamoDBDocumentClient.from(dynamoClient);
 
-  let imagen_key = null;
+// Headers CORS según estándares 2025
+const corsHeaders = {
+  "Content-Type": "application/json",
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+};
 
-  // Subir imagen si se incluye
-  if (imagen_base64) {
-    const buffer = Buffer.from(imagen_base64, 'base64');
-    imagen_key = `${codigo}.jpeg`;
+export const crearProducto = async (event) => {
+  console.log("Evento recibido:", JSON.stringify(event, null, 2));
 
-    const s3Params = {
-      Bucket: process.env.IMAGENES_BUCKET,
-      Key: imagen_key,
-      Body: buffer,
-      ContentEncoding: 'base64',
-      ContentType: 'image/jpeg'
+  // Manejar requests OPTIONS para CORS preflight
+  if (event.httpMethod === "OPTIONS") {
+    return {
+      statusCode: 200,
+      headers: corsHeaders,
+      body: JSON.stringify({ message: "CORS preflight OK" }),
+    };
+  }
+
+  try {
+    // Acceder a variables de entorno de forma segura
+    const tableName = process.env.PRODUCTOS_TABLE;
+    if (!tableName) {
+      throw new Error("PRODUCTOS_TABLE environment variable is not set");
+    }
+
+    // Parsear el body del request
+    if (!event.body) {
+      return {
+        statusCode: 400,
+        headers: corsHeaders,
+        body: JSON.stringify({
+          mensaje: "Body del request requerido",
+        }),
+      };
+    }
+
+    const { codigo, nombre, descripcion, precio, cantidad } = JSON.parse(
+      event.body
+    );
+
+    // Validar campos requeridos
+    if (!codigo || !nombre || !precio) {
+      return {
+        statusCode: 400,
+        headers: corsHeaders,
+        body: JSON.stringify({
+          mensaje: "Campos requeridos: codigo, nombre, precio",
+        }),
+      };
+    }
+
+    // Crear el producto con tenant_id para Grupo 3
+    const producto = {
+      codigo,
+      nombre,
+      descripcion: descripcion || "",
+      precio: parseFloat(precio),
+      cantidad: parseInt(cantidad) || 0,
+      tenant_id: "grupo3", // Hardcoded para Grupo 3
+      fechaCreacion: new Date().toISOString(),
+      categoria: "Electrónicos", // Categoría del Grupo 3
     };
 
-    await s3.putObject(s3Params).promise();
-  }
-
-  // Construir item del producto
-  const producto = {
-    codigo,
-    tenant_id: validacion.datos.tenant_id,
-    user_id: validacion.datos.user_id,
-    nombre,
-    descripcion,
-    precio,
-    cantidad: (typeof cantidad === 'number' && cantidad >= 1) ? cantidad : 1, // default a 1 si no lo manda
-    ...(imagen_key && { imagen_key })
-  };
-
-  await dynamodb.put({
-    TableName: process.env.PRODUCTOS_TABLE,
-    Item: producto
-  }).promise();
-
-  // Generar URL firmada si hay imagen
-  let imagen_url = null;
-  if (imagen_key) {
-    imagen_url = s3.getSignedUrl('getObject', {
-      Bucket: process.env.IMAGENES_BUCKET,
-      Key: imagen_key,
-      Expires: 60 * 5
+    // Usar AWS SDK v3 command pattern
+    const command = new PutCommand({
+      TableName: tableName,
+      Item: producto,
     });
-  }
 
-  return {
-    statusCode: 200,
-    body: JSON.stringify({
-      mensaje: 'Producto creado correctamente',
-      producto: {
-        ...producto,
-        ...(imagen_url && { imagen_url })
-      }
-    })
-  };
+    await docClient.send(command);
+
+    return {
+      statusCode: 201,
+      headers: corsHeaders,
+      body: JSON.stringify({
+        mensaje: "Producto creado exitosamente - Grupo 3",
+        producto: producto,
+      }),
+    };
+  } catch (error) {
+    console.error("Error al crear producto:", error);
+    return {
+      statusCode: 500,
+      headers: corsHeaders,
+      body: JSON.stringify({
+        mensaje: "Error al crear producto",
+        detalle: error.message,
+      }),
+    };
+  }
 };

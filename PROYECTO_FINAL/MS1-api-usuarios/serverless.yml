@@ -1,5 +1,5 @@
 #org: ivanrodriguezperez
-org: supermanzana25
+org: adrianurbinamendoza
 service: MS1-api-usuarios
 
 provider:
@@ -13,7 +13,7 @@ provider:
     TOKENS_TABLE: ${sls:stage}-t_MS1_tokens_acceso
   iam:
     #role: arn:aws:iam::748213590633:role/LabRole
-    role: arn:aws:iam::281612000535:role/LabRole
+    role: arn:aws:iam::254780740814:role/LabRole
 
 functions:
   crearUsuario:
@@ -24,7 +24,7 @@ functions:
           method: post
           cors:
             origins:
-              - '*'
+              - "*"
             headers:
               - Content-Type
               - X-Amz-Date
@@ -40,7 +40,7 @@ functions:
           method: options
           cors:
             origins:
-              - '*'
+              - "*"
             headers:
               - Content-Type
               - X-Amz-Date
@@ -60,7 +60,7 @@ functions:
           method: post
           cors:
             origins:
-              - '*'
+              - "*"
             headers:
               - Content-Type
               - X-Amz-Date
@@ -76,7 +76,7 @@ functions:
           method: options
           cors:
             origins:
-              - '*'
+              - "*"
             headers:
               - Content-Type
               - X-Amz-Date
@@ -96,7 +96,7 @@ functions:
           method: post
           cors:
             origins:
-              - '*'
+              - "*"
             headers:
               - Content-Type
               - X-Amz-Date
@@ -112,7 +112,7 @@ functions:
           method: options
           cors:
             origins:
-              - '*'
+              - "*"
             headers:
               - Content-Type
               - X-Amz-Date

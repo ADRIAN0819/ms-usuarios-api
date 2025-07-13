@@ -1,70 +1,64 @@
-const AWS = require('aws-sdk');
-const dynamodb = new AWS.DynamoDB.DocumentClient();
-const { validarToken } = require('../middleware/validarToken');
+// Usando AWS SDK v3 - Mejores prácticas 2025
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, ScanCommand } from "@aws-sdk/lib-dynamodb";
 
-module.exports.listarProductos = async (event) => {
-  // Intentamos validar el token, pero no lo hacemos obligatorio
-  let userId = null;
-  let tenantId = null;
+// Inicializar cliente fuera del handler para reutilización
+const dynamoClient = new DynamoDBClient();
+const docClient = DynamoDBDocumentClient.from(dynamoClient);
 
-  const validacion = await validarToken(event.headers);
-  if (validacion.ok) {
-    userId = validacion.datos.user_id;
-    tenantId = validacion.datos.tenant_id;
-  }
+// Headers CORS según estándares 2025
+const corsHeaders = {
+  "Content-Type": "application/json",
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+};
 
-  const limit = event.queryStringParameters?.limit
-    ? parseInt(event.queryStringParameters.limit)
-    : 5;
+export const listarProductos = async (event) => {
+  console.log("Evento recibido:", JSON.stringify(event, null, 2));
 
-  const startKey = event.queryStringParameters?.startKey
-    ? JSON.parse(decodeURIComponent(event.queryStringParameters.startKey))
-    : undefined;
-
-  const soloMios = event.queryStringParameters?.soloMios === 'true';
-
-  if (!tenantId) {
+  // Manejar requests OPTIONS para CORS preflight
+  if (event.httpMethod === "OPTIONS") {
     return {
-      statusCode: 401,
-      body: JSON.stringify({ mensaje: 'Token requerido para listar productos de tu tenant' })
+      statusCode: 200,
+      headers: corsHeaders,
+      body: JSON.stringify({ message: "CORS preflight OK" }),
     };
   }
 
-  const params = {
-    TableName: process.env.PRODUCTOS_TABLE,
-    Limit: limit,
-    FilterExpression: 'tenant_id = :tid',
-    ExpressionAttributeValues: {
-      ':tid': tenantId
-    }
-  };
-
-  if (soloMios) {
-    if (!userId) {
-      return {
-        statusCode: 401,
-        body: JSON.stringify({ mensaje: 'Token requerido para ver tus productos' })
-      };
+  try {
+    // Acceder a variables de entorno de forma segura
+    const tableName = process.env.PRODUCTOS_TABLE;
+    if (!tableName) {
+      throw new Error("PRODUCTOS_TABLE environment variable is not set");
     }
 
-    // Agregar filtro por user_id también
-    params.FilterExpression += ' AND user_id = :uid';
-    params.ExpressionAttributeValues[':uid'] = userId;
+    // Usar AWS SDK v3 command pattern
+    const command = new ScanCommand({
+      TableName: tableName,
+    });
+
+    const data = await docClient.send(command);
+
+    return {
+      statusCode: 200,
+      headers: corsHeaders,
+      body: JSON.stringify({
+        productos: data.Items || [],
+        count: data.Items ? data.Items.length : 0,
+        message: "Productos listados exitosamente - Grupo 3",
+      }),
+    };
+  } catch (error) {
+    console.error("Error al listar productos:", error);
+    return {
+      statusCode: 500,
+      headers: corsHeaders,
+      body: JSON.stringify({
+        mensaje: "Error al listar productos",
+        detalle: error.message,
+      }),
+    };
   }
-
-  if (startKey) {
-    params.ExclusiveStartKey = startKey;
-  }
-
-  const data = await dynamodb.scan(params).promise();
-
-  return {
-    statusCode: 200,
-    body: JSON.stringify({
-      items: data.Items,
-      nextPageToken: data.LastEvaluatedKey
-        ? encodeURIComponent(JSON.stringify(data.LastEvaluatedKey))
-        : null
-    })
-  };
 };

@@ -1,21 +1,21 @@
 #org: ivanrodriguezperez
-org: supermanzana25
+org: adrianurbinamendoza
 service: MS2-api-productos
 
 provider:
   name: aws
-  runtime: nodejs16.x
+  runtime: nodejs18.x
   memorySize: 1024
   timeout: 30
   environment:
     JWT_SECRET: clave_de_prueba
     PRODUCTOS_TABLE: ${sls:stage}-t_MS2_productos
     #IMAGENES_BUCKET: ${sls:stage}-ms2-productos-imgs
-    IMAGENES_BUCKET: ${sls:stage}-ms2-productos-imgs-marco
+    IMAGENES_BUCKET: ${sls:stage}-ms2-productos-imgs-grupo3
     TOKENS_TABLE: ${sls:stage}-t_MS1_tokens_acceso
   iam:
     #role: arn:aws:iam::748213590633:role/LabRole
-    role: arn:aws:iam::281612000535:role/LabRole
+    role: arn:aws:iam::254780740814:role/LabRole
 
 functions:
   crearProducto:
@@ -24,7 +24,35 @@ functions:
       - http:
           path: productos/crear
           method: post
-          cors: true
+          cors:
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+            methods:
+              - POST
+              - OPTIONS
+          integration: lambda-proxy
+      - http:
+          path: productos/crear
+          method: options
+          cors:
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+            methods:
+              - POST
+              - OPTIONS
+          integration: lambda-proxy
 
   listarProductos:
     handler: lambdas/listarProductos.listarProductos
@@ -32,7 +60,35 @@ functions:
       - http:
           path: productos/listar
           method: get
-          cors: true
+          cors:
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+            methods:
+              - GET
+              - OPTIONS
+          integration: lambda-proxy
+      - http:
+          path: productos/listar
+          method: options
+          cors:
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+            methods:
+              - GET
+              - OPTIONS
+          integration: lambda-proxy
 
   buscarProducto:
     handler: lambdas/buscarProducto.buscarProducto
@@ -40,7 +96,35 @@ functions:
       - http:
           path: productos/buscar/{codigo}
           method: get
-          cors: true
+          cors:
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+            methods:
+              - GET
+              - OPTIONS
+          integration: lambda-proxy
+      - http:
+          path: productos/buscar/{codigo}
+          method: options
+          cors:
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+            methods:
+              - GET
+              - OPTIONS
+          integration: lambda-proxy
 
   modificarProducto:
     handler: lambdas/modificarProducto.modificarProducto
@@ -48,7 +132,35 @@ functions:
       - http:
           path: productos/modificar
           method: put
-          cors: true
+          cors:
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+            methods:
+              - PUT
+              - OPTIONS
+          integration: lambda-proxy
+      - http:
+          path: productos/modificar
+          method: options
+          cors:
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+            methods:
+              - PUT
+              - OPTIONS
+          integration: lambda-proxy
 
   eliminarProducto:
     handler: lambdas/eliminarProducto.eliminarProducto
@@ -56,7 +168,35 @@ functions:
       - http:
           path: productos/eliminar
           method: delete
-          cors: true
+          cors:
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+            methods:
+              - DELETE
+              - OPTIONS
+          integration: lambda-proxy
+      - http:
+          path: productos/eliminar
+          method: options
+          cors:
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+            methods:
+              - DELETE
+              - OPTIONS
+          integration: lambda-proxy
 
 resources:
   Resources:
@@ -71,7 +211,7 @@ resources:
           - AttributeName: codigo
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
-        
+
     ImagenesBucket:
       Type: AWS::S3::Bucket
       Properties:

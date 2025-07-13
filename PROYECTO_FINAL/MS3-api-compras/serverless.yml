@@ -1,5 +1,5 @@
 #org: ivanrodriguezperez
-org: supermanzana25
+org: adrianurbinamendoza
 service: MS3-api-compras
 
 provider:
@@ -13,7 +13,7 @@ provider:
     PRODUCTOS_TABLE: ${sls:stage}-t_MS2_productos
   iam:
     #role: arn:aws:iam::748213590633:role/LabRole
-    role: arn:aws:iam::281612000535:role/LabRole
+    role: arn:aws:iam::254780740814:role/LabRole
 
 functions:
   registrarCompra:
@@ -22,7 +22,35 @@ functions:
       - http:
           path: compras/registrar
           method: post
-          cors: true
+          cors:
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+            methods:
+              - POST
+              - OPTIONS
+          integration: lambda-proxy
+      - http:
+          path: compras/registrar
+          method: options
+          cors:
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+            methods:
+              - POST
+              - OPTIONS
+          integration: lambda-proxy
 
   listarCompras:
     handler: lambdas/listar_compras.lambda_handler
@@ -30,7 +58,35 @@ functions:
       - http:
           path: compras/listar
           method: get
-          cors: true
+          cors:
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+            methods:
+              - GET
+              - OPTIONS
+          integration: lambda-proxy
+      - http:
+          path: compras/listar
+          method: options
+          cors:
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+            methods:
+              - GET
+              - OPTIONS
+          integration: lambda-proxy
 
 resources:
   Resources:

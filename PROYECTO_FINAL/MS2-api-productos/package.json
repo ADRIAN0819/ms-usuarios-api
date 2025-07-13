@@ -1,0 +1,24 @@
+{
+  "name": "ms2-api-productos-grupo3",
+  "version": "1.0.0",
+  "description": "API de productos para Grupo 3 - Productos Electrónicos",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.511.0",
+    "@aws-sdk/lib-dynamodb": "^3.511.0",
+    "@aws-sdk/client-s3": "^3.511.0"
+  },
+  "keywords": [
+    "serverless",
+    "aws",
+    "lambda",
+    "dynamodb",
+    "grupo3"
+  ],
+  "author": "Grupo 3",
+  "license": "MIT"
+}

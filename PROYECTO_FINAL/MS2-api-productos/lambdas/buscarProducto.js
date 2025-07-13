@@ -1,41 +1,97 @@
-const AWS = require('aws-sdk');
-const { validarToken } = require('../middleware/validarToken');
-const dynamodb = new AWS.DynamoDB.DocumentClient();
+// Usando AWS SDK v3 - Mejores prácticas 2025
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
 
-module.exports.buscarProducto = async (event) => {
-  // Validar token
-  const validacion = await validarToken(event.headers);
-  if (!validacion.ok) return validacion.respuesta;
+// Inicializar cliente fuera del handler para reutilización
+const dynamoClient = new DynamoDBClient();
+const docClient = DynamoDBDocumentClient.from(dynamoClient);
 
-  const userId = validacion.datos.user_id;
-  const tenantId = validacion.datos.tenant_id;
+// Headers CORS según estándares 2025
+const corsHeaders = {
+  "Content-Type": "application/json",
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+};
 
-  const codigo = event.pathParameters.codigo;
+export const buscarProducto = async (event) => {
+  console.log("Evento recibido:", JSON.stringify(event, null, 2));
 
-  const params = {
-    TableName: process.env.PRODUCTOS_TABLE,
-    Key: { codigo }
-  };
+  // Manejar requests OPTIONS para CORS preflight
+  if (event.httpMethod === "OPTIONS") {
+    return {
+      statusCode: 200,
+      headers: corsHeaders,
+      body: JSON.stringify({ message: "CORS preflight OK" }),
+    };
+  }
 
   try {
-    const data = await dynamodb.get(params).promise();
+    // Acceder a variables de entorno de forma segura
+    const tableName = process.env.PRODUCTOS_TABLE;
+    if (!tableName) {
+      throw new Error("PRODUCTOS_TABLE environment variable is not set");
+    }
 
-    if (!data.Item || data.Item.tenant_id !== tenantId) {
+    // Obtener código del path parameter
+    const codigo = event.pathParameters?.codigo;
+    if (!codigo) {
+      return {
+        statusCode: 400,
+        headers: corsHeaders,
+        body: JSON.stringify({
+          mensaje: "Código de producto requerido en el path",
+        }),
+      };
+    }
+
+    // Usar AWS SDK v3 command pattern
+    const command = new GetCommand({
+      TableName: tableName,
+      Key: { codigo },
+    });
+
+    const data = await docClient.send(command);
+
+    if (!data.Item) {
       return {
         statusCode: 404,
-        body: JSON.stringify({ mensaje: 'Producto no encontrado o no autorizado' })
+        headers: corsHeaders,
+        body: JSON.stringify({
+          mensaje: "Producto no encontrado",
+        }),
+      };
+    }
+
+    // Filtrar por tenant para Grupo 3
+    if (data.Item.tenant_id !== "grupo3") {
+      return {
+        statusCode: 404,
+        headers: corsHeaders,
+        body: JSON.stringify({
+          mensaje: "Producto no encontrado o no autorizado",
+        }),
       };
     }
 
     return {
       statusCode: 200,
-      body: JSON.stringify(data.Item)
+      headers: corsHeaders,
+      body: JSON.stringify({
+        mensaje: "Producto encontrado - Grupo 3",
+        producto: data.Item,
+      }),
     };
-  } catch (err) {
-    console.error("Error al buscar producto:", err);
+  } catch (error) {
+    console.error("Error al buscar producto:", error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ mensaje: 'Error al buscar el producto', detalle: err.message })
+      headers: corsHeaders,
+      body: JSON.stringify({
+        mensaje: "Error al buscar el producto",
+        detalle: error.message,
+      }),
     };
   }
 };
