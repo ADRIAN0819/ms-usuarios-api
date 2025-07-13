@@ -5,6 +5,7 @@ import {
   GetCommand,
   DeleteCommand,
 } from "@aws-sdk/lib-dynamodb";
+import { validarToken } from "../middleware/validarToken.js";
 
 // Inicializar cliente fuera del handler para reutilización
 const dynamoClient = new DynamoDBClient();
@@ -32,6 +33,16 @@ export const eliminarProducto = async (event) => {
   }
 
   try {
+    // Validar token de autenticación
+    const tokenValidation = await validarToken(event.headers);
+    if (!tokenValidation.ok) {
+      const errorResponse = tokenValidation.respuesta;
+      errorResponse.headers = corsHeaders;
+      return errorResponse;
+    }
+
+    const tokenData = tokenValidation.datos;
+
     // Acceder a variables de entorno de forma segura
     const tableName = process.env.PRODUCTOS_TABLE;
     if (!tableName) {
@@ -80,7 +91,7 @@ export const eliminarProducto = async (event) => {
       };
     }
 
-    if (existingData.Item.tenant_id !== "grupo3") {
+    if (existingData.Item.tenant_id !== tokenData.tenant_id) {
       return {
         statusCode: 403,
         headers: corsHeaders,

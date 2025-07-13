@@ -6,7 +6,7 @@ provider:
   name: aws
   runtime: nodejs18.x
   memorySize: 1024
-  timeout: 30
+  timeout: 29
   environment:
     JWT_SECRET: clave_de_prueba
     PRODUCTOS_TABLE: ${sls:stage}-t_MS2_productos

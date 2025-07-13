@@ -1,0 +1,307 @@
+====================================================================
+        GUÍA COMPLETA PARA PROBAR EN POSTMAN - SISTEMA MICROSERVICIOS
+====================================================================
+
+📋 ORDEN DE PRUEBAS:
+1. MS1 - Crear Usuario
+2. MS1 - Login Usuario (obtener token)
+3. MS1 - Validar Token
+4. MS2 - Listar Productos (público)
+5. MS2 - Crear Producto (requiere token)
+6. MS2 - Buscar Producto (público)
+7. MS2 - Modificar Producto (requiere token + ownership)
+8. MS2 - Eliminar Producto (requiere token + ownership)
+9. MS3 - Registrar Compra (requiere token)
+10. MS3 - Listar Compras (requiere token)
+
+====================================================================
+                            MS1 - API USUARIOS
+====================================================================
+
+🔗 URL BASE: https://dchblr3rv8.execute-api.us-east-1.amazonaws.com/dev
+
+-------------------------------------------------------------------
+1. CREAR USUARIO
+-------------------------------------------------------------------
+MÉTODO: POST
+URL: {{MS1_BASE}}/usuarios/crear
+HEADERS:
+Content-Type: application/json
+
+BODY (JSON):
+{
+  "user_id": "user_test_postman",
+  "email": "test@postman.com",
+  "password": "password123",
+  "tenant_id": "empresa_postman"
+}
+
+RESPUESTA ESPERADA:
+{
+  "mensaje": "Usuario creado exitosamente",
+  "user_id": "user_test_postman"
+}
+
+-------------------------------------------------------------------
+2. LOGIN USUARIO
+-------------------------------------------------------------------
+MÉTODO: POST
+URL: {{MS1_BASE}}/usuarios/login
+HEADERS:
+Content-Type: application/json
+
+BODY (JSON):
+{
+  "user_id": "user_test_postman",
+  "password": "password123"
+}
+
+RESPUESTA ESPERADA:
+{
+  "mensaje": "Login exitoso",
+  "token": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+  "user_id": "user_test_postman",
+  "tenant_id": "empresa_postman"
+}
+
+⚠️ IMPORTANTE: Copiar el TOKEN de la respuesta para usarlo en las siguientes pruebas
+
+-------------------------------------------------------------------
+3. VALIDAR TOKEN
+-------------------------------------------------------------------
+MÉTODO: POST
+URL: {{MS1_BASE}}/usuarios/validar
+HEADERS:
+Content-Type: application/json
+
+BODY (JSON):
+{
+  "token": "{{TOKEN_OBTENIDO_EN_LOGIN}}"
+}
+
+RESPUESTA ESPERADA:
+{
+  "message": "Token válido",
+  "tenant_id": "empresa_postman",
+  "user_id": "user_test_postman"
+}
+
+====================================================================
+                            MS2 - API PRODUCTOS
+====================================================================
+
+🔗 URL BASE: https://d3fhew8l8b.execute-api.us-east-1.amazonaws.com/dev
+
+-------------------------------------------------------------------
+4. LISTAR PRODUCTOS (PÚBLICO)
+-------------------------------------------------------------------
+MÉTODO: GET
+URL: {{MS2_BASE}}/productos/listar
+HEADERS:
+Content-Type: application/json
+
+RESPUESTA ESPERADA:
+{
+  "productos": [
+    {
+      "codigo": "TEST001",
+      "nombre": "Test Product MS2",
+      "cantidad": 5,
+      ...
+    }
+  ],
+  "count": 3,
+  "message": "Productos listados exitosamente - Grupo 3"
+}
+
+-------------------------------------------------------------------
+5. CREAR PRODUCTO (REQUIERE TOKEN)
+-------------------------------------------------------------------
+MÉTODO: POST
+URL: {{MS2_BASE}}/productos/crear
+HEADERS:
+Authorization: Bearer {{TOKEN_OBTENIDO_EN_LOGIN}}
+Content-Type: application/json
+
+BODY (JSON):
+{
+  "codigo": "POSTMAN001",
+  "nombre": "Producto desde Postman",
+  "descripcion": "Producto creado desde Postman para pruebas",
+  "precio": 299.99,
+  "cantidad": 10,
+  "categoria": "Pruebas"
+}
+
+RESPUESTA ESPERADA:
+{
+  "mensaje": "Producto creado exitosamente - Grupo 3",
+  "producto": {
+    "codigo": "POSTMAN001",
+    "nombre": "Producto desde Postman",
+    "tenant_id": "empresa_postman",
+    "user_id": "user_test_postman",
+    ...
+  }
+}
+
+-------------------------------------------------------------------
+6. BUSCAR PRODUCTO (PÚBLICO)
+-------------------------------------------------------------------
+MÉTODO: GET
+URL: {{MS2_BASE}}/productos/buscar/POSTMAN001
+HEADERS:
+Content-Type: application/json
+
+RESPUESTA ESPERADA:
+{
+  "mensaje": "Producto encontrado",
+  "producto": {
+    "codigo": "POSTMAN001",
+    "nombre": "Producto desde Postman",
+    ...
+  }
+}
+
+-------------------------------------------------------------------
+7. MODIFICAR PRODUCTO (REQUIERE TOKEN + OWNERSHIP)
+-------------------------------------------------------------------
+MÉTODO: PUT
+URL: {{MS2_BASE}}/productos/modificar
+HEADERS:
+Authorization: Bearer {{TOKEN_OBTENIDO_EN_LOGIN}}
+Content-Type: application/json
+
+BODY (JSON):
+{
+  "codigo": "POSTMAN001",
+  "nombre": "Producto desde Postman - MODIFICADO",
+  "descripcion": "Producto modificado desde Postman",
+  "precio": 399.99,
+  "cantidad": 15,
+  "categoria": "Pruebas Modificadas"
+}
+
+RESPUESTA ESPERADA:
+{
+  "mensaje": "Producto modificado exitosamente - Grupo 3",
+  "producto": {
+    "codigo": "POSTMAN001",
+    "nombre": "Producto desde Postman - MODIFICADO",
+    "fechaModificacion": "2025-07-13T...",
+    ...
+  }
+}
+
+-------------------------------------------------------------------
+8. ELIMINAR PRODUCTO (REQUIERE TOKEN + OWNERSHIP)
+-------------------------------------------------------------------
+MÉTODO: DELETE
+URL: {{MS2_BASE}}/productos/eliminar
+HEADERS:
+Authorization: Bearer {{TOKEN_OBTENIDO_EN_LOGIN}}
+Content-Type: application/json
+
+BODY (JSON):
+{
+  "codigo": "POSTMAN001"
+}
+
+RESPUESTA ESPERADA:
+{
+  "mensaje": "Producto eliminado exitosamente - Grupo 3"
+}
+
+====================================================================
+                            MS3 - API COMPRAS
+====================================================================
+
+🔗 URL BASE: https://bi3zdo4r1c.execute-api.us-east-1.amazonaws.com/dev
+
+⚠️ NOTA: Para estas pruebas, primero crear un producto en MS2 con stock disponible
+
+-------------------------------------------------------------------
+9. REGISTRAR COMPRA (REQUIERE TOKEN)
+-------------------------------------------------------------------
+MÉTODO: POST
+URL: {{MS3_BASE}}/compras/registrar
+HEADERS:
+Authorization: Bearer {{TOKEN_OBTENIDO_EN_LOGIN}}
+Content-Type: application/json
+
+BODY (JSON):
+{
+  "productos": [
+    {
+      "codigo": "TEST001",
+      "cantidad": 1
+    }
+  ]
+}
+
+RESPUESTA ESPERADA:
+{
+  "mensaje": "Compra registrada",
+  "compra_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+}
+
+-------------------------------------------------------------------
+10. LISTAR COMPRAS (REQUIERE TOKEN)
+-------------------------------------------------------------------
+MÉTODO: GET
+URL: {{MS3_BASE}}/compras/listar
+HEADERS:
+Authorization: Bearer {{TOKEN_OBTENIDO_EN_LOGIN}}
+Content-Type: application/json
+
+RESPUESTA ESPERADA:
+[
+  {
+    "user_id": "user_test_postman",
+    "tenant_id": "empresa_postman",
+    "fecha": "2025-07-13 07:15:30",
+    "productos": [
+      {
+        "precio_unitario": 99.99,
+        "codigo": "TEST001",
+        "cantidad": 1,
+        "nombre": "Test Product MS2"
+      }
+    ],
+    "compra_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+  }
+]
+
+====================================================================
+                        VARIABLES DE POSTMAN
+====================================================================
+
+Para facilitar las pruebas, crear estas variables en Postman:
+
+1. MS1_BASE: https://dchblr3rv8.execute-api.us-east-1.amazonaws.com/dev
+2. MS2_BASE: https://d3fhew8l8b.execute-api.us-east-1.amazonaws.com/dev
+3. MS3_BASE: https://bi3zdo4r1c.execute-api.us-east-1.amazonaws.com/dev
+4. TOKEN: (se actualizará después del login)
+
+====================================================================
+                            NOTAS IMPORTANTES
+====================================================================
+
+🔒 SEGURIDAD:
+- MS1: Todos los endpoints funcionan independientemente
+- MS2: listar y buscar son públicos; crear, modificar, eliminar requieren token
+- MS3: Todos los endpoints requieren token
+
+🔗 INTEGRACIÓN:
+- MS3 valida stock en MS2 antes de registrar compras
+- MS3 actualiza stock en MS2 después de compras exitosas
+- Solo puedes modificar/eliminar productos de tu tenant
+
+🐛 DEBUGGING:
+- Si recibes "No autorizado": verifica que el token sea válido
+- Si recibes "Stock insuficiente": verifica cantidad disponible en MS2
+- Si recibes "Producto no encontrado": verifica que el código exista
+
+====================================================================
+                            FIN DE LA GUÍA
+====================================================================

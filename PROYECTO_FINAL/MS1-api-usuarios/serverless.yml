@@ -24,7 +24,7 @@ functions:
           method: post
           cors:
             origins:
-              - "*"
+              - '*'
             headers:
               - Content-Type
               - X-Amz-Date
@@ -40,7 +40,7 @@ functions:
           method: options
           cors:
             origins:
-              - "*"
+              - '*'
             headers:
               - Content-Type
               - X-Amz-Date
@@ -60,7 +60,7 @@ functions:
           method: post
           cors:
             origins:
-              - "*"
+              - '*'
             headers:
               - Content-Type
               - X-Amz-Date
@@ -76,7 +76,7 @@ functions:
           method: options
           cors:
             origins:
-              - "*"
+              - '*'
             headers:
               - Content-Type
               - X-Amz-Date
@@ -96,7 +96,7 @@ functions:
           method: post
           cors:
             origins:
-              - "*"
+              - '*'
             headers:
               - Content-Type
               - X-Amz-Date
@@ -112,7 +112,7 @@ functions:
           method: options
           cors:
             origins:
-              - "*"
+              - '*'
             headers:
               - Content-Type
               - X-Amz-Date

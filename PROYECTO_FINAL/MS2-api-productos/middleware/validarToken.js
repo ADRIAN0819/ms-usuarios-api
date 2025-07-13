@@ -1,7 +1,11 @@
-const AWS = require('aws-sdk');
-const dynamodb = new AWS.DynamoDB.DocumentClient();
+// Usando AWS SDK v3 - Compatible con el resto del proyecto
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
 
-module.exports.validarToken = async (headers) => {
+const dynamoClient = new DynamoDBClient();
+const docClient = DynamoDBDocumentClient.from(dynamoClient);
+
+export const validarToken = async (headers) => {
   let token = headers['x-auth-token'] || headers['authorization'] || headers['Authorization'];
 
   if (!token) {
@@ -22,10 +26,12 @@ module.exports.validarToken = async (headers) => {
   try {
     const tableName = process.env.TOKENS_TABLE;
 
-    const res = await dynamodb.get({
+    const command = new GetCommand({
       TableName: tableName,
       Key: { token }
-    }).promise();
+    });
+
+    const res = await docClient.send(command);
 
     if (!res.Item) {
       return {

@@ -1,0 +1,8 @@
+{
+  "codigo": "PROD002",
+  "nombre": "Laptop Gaming",
+  "descripcion": "Laptop para gaming de alta gama",
+  "precio": 1299.99,
+  "cantidad": 5,
+  "categoria": "Electrónicos"
+}

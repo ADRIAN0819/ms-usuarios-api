@@ -1,6 +1,7 @@
 // Usando AWS SDK v3 - Mejores prácticas 2025
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { validarToken } from "../middleware/validarToken.js";
 
 // Inicializar cliente fuera del handler para reutilización
 const dynamoClient = new DynamoDBClient();
@@ -28,6 +29,16 @@ export const crearProducto = async (event) => {
   }
 
   try {
+    // Validar token de autenticación
+    const tokenValidation = await validarToken(event.headers);
+    if (!tokenValidation.ok) {
+      const errorResponse = tokenValidation.respuesta;
+      errorResponse.headers = corsHeaders;
+      return errorResponse;
+    }
+
+    const tokenData = tokenValidation.datos;
+
     // Acceder a variables de entorno de forma segura
     const tableName = process.env.PRODUCTOS_TABLE;
     if (!tableName) {
@@ -60,14 +71,15 @@ export const crearProducto = async (event) => {
       };
     }
 
-    // Crear el producto con tenant_id para Grupo 3
+    // Crear el producto con datos del token autenticado
     const producto = {
       codigo,
       nombre,
       descripcion: descripcion || "",
       precio: parseFloat(precio),
       cantidad: parseInt(cantidad) || 0,
-      tenant_id: "grupo3", // Hardcoded para Grupo 3
+      tenant_id: tokenData.tenant_id, // Usar tenant del token
+      user_id: tokenData.user_id, // Asociar al usuario autenticado
       fechaCreacion: new Date().toISOString(),
       categoria: "Electrónicos", // Categoría del Grupo 3
     };

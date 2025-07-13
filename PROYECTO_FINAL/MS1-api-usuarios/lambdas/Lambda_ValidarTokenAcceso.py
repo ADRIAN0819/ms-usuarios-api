@@ -23,6 +23,14 @@ def lambda_handler(event, context):
         }
     
     try:
+        # Verificar que el body no sea None
+        if not event.get('body'):
+            return {
+                'statusCode': 400,
+                'headers': cors_headers,
+                'body': json.dumps({'error': 'Cuerpo del request vacío'})
+            }
+        
         # Asegurarse que el cuerpo sea JSON
         body = json.loads(event['body'])
         token = body.get('token')

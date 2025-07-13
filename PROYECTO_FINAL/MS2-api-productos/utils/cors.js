@@ -25,7 +25,7 @@ const responseWithCors = (statusCode, body) => {
   };
 };
 
-module.exports = {
+export {
   corsHeaders,
   handleOptions,
   responseWithCors,

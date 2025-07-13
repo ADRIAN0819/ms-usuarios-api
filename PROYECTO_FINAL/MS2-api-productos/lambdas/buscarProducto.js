@@ -64,22 +64,11 @@ export const buscarProducto = async (event) => {
       };
     }
 
-    // Filtrar por tenant para Grupo 3
-    if (data.Item.tenant_id !== "grupo3") {
-      return {
-        statusCode: 404,
-        headers: corsHeaders,
-        body: JSON.stringify({
-          mensaje: "Producto no encontrado o no autorizado",
-        }),
-      };
-    }
-
     return {
       statusCode: 200,
       headers: corsHeaders,
       body: JSON.stringify({
-        mensaje: "Producto encontrado - Grupo 3",
+        mensaje: "Producto encontrado",
         producto: data.Item,
       }),
     };

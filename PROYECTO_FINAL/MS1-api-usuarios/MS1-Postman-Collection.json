@@ -1,0 +1,98 @@
+{
+  "info": {
+    "name": "MS1-api-usuarios",
+    "description": "Colección para testear el microservicio de usuarios",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://YOUR_API_GATEWAY_URL",
+      "description": "Reemplaza con tu URL de API Gateway"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "description": "Token obtenido del login"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Crear Usuario",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"user_id\": \"test@example.com\",\n  \"password\": \"mipassword123\",\n  \"name\": \"Usuario de Prueba\",\n  \"tenant_id\": \"tenant001\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/usuarios/crear",
+          "host": ["{{base_url}}"],
+          "path": ["usuarios", "crear"]
+        }
+      }
+    },
+    {
+      "name": "2. Login Usuario",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"user_id\": \"test@example.com\",\n  \"password\": \"mipassword123\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/usuarios/login",
+          "host": ["{{base_url}}"],
+          "path": ["usuarios", "login"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "  const response = pm.response.json();",
+              "  pm.collectionVariables.set('token', response.token);",
+              "  console.log('Token guardado:', response.token);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Validar Token",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"token\": \"{{token}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/usuarios/validar",
+          "host": ["{{base_url}}"],
+          "path": ["usuarios", "validar"]
+        }
+      }
+    }
+  ]
+}

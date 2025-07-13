@@ -6,7 +6,7 @@ provider:
   name: aws
   runtime: python3.12
   memorySize: 1024
-  timeout: 30
+  timeout: 29
   environment:
     COMPRAS_TABLE: ${sls:stage}-t_MS3_compras
     TOKENS_TABLE: ${sls:stage}-t_MS1_tokens_acceso
