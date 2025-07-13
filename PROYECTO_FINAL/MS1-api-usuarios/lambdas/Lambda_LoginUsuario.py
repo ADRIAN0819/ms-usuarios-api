@@ -5,13 +5,29 @@ from datetime import datetime, timedelta
 import json
 import os  # para leer variables de entorno
 
+# Headers CORS para todas las respuestas
+cors_headers = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+}
+
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
 def lambda_handler(event, context):
+    print("Evento recibido:", event)
+    
+    # Manejar requests OPTIONS para CORS preflight
+    if event.get('httpMethod') == 'OPTIONS':
+        return {
+            'statusCode': 200,
+            'headers': cors_headers,
+            'body': json.dumps({'message': 'CORS preflight'})
+        }
+    
     try:
-        print("Evento recibido:", event)
-
         # Convertir body JSON
         body = json.loads(event['body'])
         user_id = body.get('user_id')
@@ -21,6 +37,7 @@ def lambda_handler(event, context):
         if not user_id or not password:
             return {
                 'statusCode': 400,
+                'headers': cors_headers,
                 'body': json.dumps({'error': 'Faltan user_id o password'})
             }
 
@@ -37,6 +54,7 @@ def lambda_handler(event, context):
         if 'Item' not in response:
             return {
                 'statusCode': 403,
+                'headers': cors_headers,
                 'body': json.dumps({'error': 'Usuario no existe'})
             }
 
@@ -44,6 +62,7 @@ def lambda_handler(event, context):
         if hashed_password != hashed_password_bd:
             return {
                 'statusCode': 403,
+                'headers': cors_headers,
                 'body': json.dumps({'error': 'Password incorrecto'})
             }
 
@@ -52,6 +71,7 @@ def lambda_handler(event, context):
         if not tenant_id:
             return {
                 'statusCode': 500,
+                'headers': cors_headers,
                 'body': json.dumps({'error': 'El usuario no tiene tenant_id'})
             }
 
@@ -70,6 +90,7 @@ def lambda_handler(event, context):
 
         return {
             'statusCode': 200,
+            'headers': cors_headers,
             'body': json.dumps({
                 'token': token,
                 'tenant_id': tenant_id  # ← opcional pero útil
@@ -80,5 +101,6 @@ def lambda_handler(event, context):
         print("ERROR:", str(e))
         return {
             'statusCode': 500,
+            'headers': cors_headers,
             'body': json.dumps({'error': str(e)})
         }

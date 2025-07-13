@@ -3,10 +3,26 @@ from datetime import datetime
 import json
 import os  # para leer variables de entorno
 
-def lambda_handler(event, context):
-    try:
-        print("Evento recibido:", event)
+# Headers CORS para todas las respuestas
+cors_headers = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+}
 
+def lambda_handler(event, context):
+    print("Evento recibido:", event)
+    
+    # Manejar requests OPTIONS para CORS preflight
+    if event.get('httpMethod') == 'OPTIONS':
+        return {
+            'statusCode': 200,
+            'headers': cors_headers,
+            'body': json.dumps({'message': 'CORS preflight'})
+        }
+    
+    try:
         # Asegurarse que el cuerpo sea JSON
         body = json.loads(event['body'])
         token = body.get('token')
@@ -14,6 +30,7 @@ def lambda_handler(event, context):
         if not token:
             return {
                 'statusCode': 400,
+                'headers': cors_headers,
                 'body': json.dumps({'error': 'Token no proporcionado'})
             }
 
@@ -28,6 +45,7 @@ def lambda_handler(event, context):
         if 'Item' not in response:
             return {
                 'statusCode': 403,
+                'headers': cors_headers,
                 'body': json.dumps({'error': 'Token no existe'})
             }
 
@@ -37,6 +55,7 @@ def lambda_handler(event, context):
         if now > expires:
             return {
                 'statusCode': 403,
+                'headers': cors_headers,
                 'body': json.dumps({'error': 'Token expirado'})
             }
 
@@ -45,6 +64,7 @@ def lambda_handler(event, context):
 
         return {
             'statusCode': 200,
+            'headers': cors_headers,
             'body': json.dumps({
                 'message': 'Token válido',
                 'tenant_id': tenant_id,
@@ -56,5 +76,6 @@ def lambda_handler(event, context):
         print("ERROR:", str(e))
         return {
             'statusCode': 500,
+            'headers': cors_headers,
             'body': json.dumps({'error': str(e)})
         }

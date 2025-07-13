@@ -22,7 +22,35 @@ functions:
       - http:
           path: usuarios/crear
           method: post
-          cors: true
+          cors:
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+            methods:
+              - POST
+              - OPTIONS
+          integration: lambda-proxy
+      - http:
+          path: usuarios/crear
+          method: options
+          cors:
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+            methods:
+              - POST
+              - OPTIONS
+          integration: lambda-proxy
 
   loginUsuario:
     handler: lambdas/Lambda_LoginUsuario.lambda_handler
@@ -30,7 +58,35 @@ functions:
       - http:
           path: usuarios/login
           method: post
-          cors: true
+          cors:
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+            methods:
+              - POST
+              - OPTIONS
+          integration: lambda-proxy
+      - http:
+          path: usuarios/login
+          method: options
+          cors:
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+            methods:
+              - POST
+              - OPTIONS
+          integration: lambda-proxy
 
   validarToken:
     handler: lambdas/Lambda_ValidarTokenAcceso.lambda_handler
@@ -38,7 +94,35 @@ functions:
       - http:
           path: usuarios/validar
           method: post
-          cors: true
+          cors:
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+            methods:
+              - POST
+              - OPTIONS
+          integration: lambda-proxy
+      - http:
+          path: usuarios/validar
+          method: options
+          cors:
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+            methods:
+              - POST
+              - OPTIONS
+          integration: lambda-proxy
 
 resources:
   Resources:
