@@ -27,10 +27,7 @@ functions:
               - '*'
             headers:
               - Content-Type
-              - X-Amz-Date
               - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
             methods:
               - POST
               - OPTIONS
@@ -43,14 +40,11 @@ functions:
               - '*'
             headers:
               - Content-Type
-              - X-Amz-Date
               - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
             methods:
               - POST
               - OPTIONS
-          integration: lambda-proxy
+          integration: mock
 
   loginUsuario:
     handler: lambdas/Lambda_LoginUsuario.lambda_handler
@@ -63,10 +57,7 @@ functions:
               - '*'
             headers:
               - Content-Type
-              - X-Amz-Date
               - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
             methods:
               - POST
               - OPTIONS
@@ -79,14 +70,11 @@ functions:
               - '*'
             headers:
               - Content-Type
-              - X-Amz-Date
               - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
             methods:
               - POST
               - OPTIONS
-          integration: lambda-proxy
+          integration: mock
 
   validarToken:
     handler: lambdas/Lambda_ValidarTokenAcceso.lambda_handler
@@ -99,10 +87,7 @@ functions:
               - '*'
             headers:
               - Content-Type
-              - X-Amz-Date
               - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
             methods:
               - POST
               - OPTIONS
@@ -115,14 +100,11 @@ functions:
               - '*'
             headers:
               - Content-Type
-              - X-Amz-Date
               - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
             methods:
               - POST
               - OPTIONS
-          integration: lambda-proxy
+          integration: mock
 
 resources:
   Resources:

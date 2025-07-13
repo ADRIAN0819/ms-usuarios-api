@@ -31,7 +31,7 @@ Content-Type: application/json
 BODY (JSON):
 {
   "user_id": "user_test_postman",
-  "email": "test@postman.com",
+  "name": "test@postman.com",
   "password": "password123",
   "tenant_id": "empresa_postman"
 }

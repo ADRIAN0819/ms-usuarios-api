@@ -7,7 +7,7 @@ import os  # para acceder a variables de entorno
 cors_headers = {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'POST, OPTIONS'
 }
 
@@ -38,7 +38,7 @@ def lambda_handler(event, context):
         user_id = body.get('user_id')
         password = body.get('password')
         name = body.get('name')
-        tenant_id = body.get('tenant_id')  # NUEVO
+        tenant_id = body.get('tenant_id')
 
         if not user_id or not password or not tenant_id:
             return {
