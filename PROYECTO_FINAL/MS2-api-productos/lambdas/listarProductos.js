@@ -50,30 +50,36 @@ export const listarProductos = async (event) => {
       };
     }
 
-    // Configurar comando de DynamoDB con paginación
+    // Configurar comando de DynamoDB - necesitamos obtener TODOS los elementos para hacer paginación manual
     const commandParams = {
       TableName: tableName,
     };
 
-    // Si se especifica limit, agregarlo al comando
-    if (limit) {
-      commandParams.Limit = limit + offset; // Necesitamos obtener más elementos para poder hacer offset
-    }
-
+    // Para paginación correcta, necesitamos obtener todos los elementos
+    // porque DynamoDB no soporta offset nativo
     const command = new ScanCommand(commandParams);
     const data = await docClient.send(command);
 
-    // Aplicar offset manualmente (DynamoDB no soporta offset nativo)
-    let productos = data.Items || [];
-    const totalCount = productos.length;
+    // Obtener todos los productos
+    let allProductos = data.Items || [];
+    const totalCount = allProductos.length;
 
-    // Aplicar offset y limit
+    // Aplicar paginación manual
+    let productos = allProductos;
+    
+    // Aplicar offset
     if (offset > 0) {
       productos = productos.slice(offset);
     }
-    if (limit && productos.length > limit) {
+    
+    // Aplicar limit
+    if (limit) {
       productos = productos.slice(0, limit);
     }
+
+    // Calcular información de paginación
+    const hasMore = limit ? (offset + limit) < totalCount : false;
+    const nextOffset = offset + (limit || 0);
 
     // Preparar respuesta con información de paginación
     const response = {
@@ -88,8 +94,8 @@ export const listarProductos = async (event) => {
       response.pagination = {
         limit: limit || totalCount,
         offset: offset,
-        hasMore: (offset + productos.length) < totalCount,
-        nextOffset: offset + productos.length
+        hasMore: hasMore,
+        nextOffset: nextOffset
       };
     }
 
