@@ -46,6 +46,8 @@ export interface LoginScreenProps {
   setUserId: (value: string) => void;
   password: string;
   setPassword: (value: string) => void;
+  showPassword: boolean;
+  setShowPassword: (value: boolean) => void;
   handleLogin: () => void;
   loading: boolean;
   setCurrentView: (view: string) => void;
@@ -58,6 +60,8 @@ export interface RegisterScreenProps {
   setUserId: (value: string) => void;
   password: string;
   setPassword: (value: string) => void;
+  showPassword: boolean;
+  setShowPassword: (value: boolean) => void;
   name: string;
   setName: (value: string) => void;
   tenantId: string;
@@ -104,4 +108,12 @@ export interface CartSectionProps {
 
 export interface ComprasSectionProps {
   compras: Compra[];
+}
+
+// Notification system interfaces
+export interface NotificationData {
+  id: string;
+  message: string;
+  type: "success" | "error" | "warning" | "info";
+  duration?: number;
 }

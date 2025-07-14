@@ -62,6 +62,103 @@ const Icons = {
       />
     </svg>
   ),
+  // Electronics-specific icons
+  Smartphone: () => (
+    <svg
+      className="w-6 h-6"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M12 18h.01M8 21h8a1 1 0 001-1V4a1 1 0 00-1-1H8a1 1 0 00-1 1v16a1 1 0 001 1z"
+      />
+    </svg>
+  ),
+  Laptop: () => (
+    <svg
+      className="w-6 h-6"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+      />
+    </svg>
+  ),
+  Headphones: () => (
+    <svg
+      className="w-6 h-6"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M15.536 12.464a5 5 0 010-7.072m2.828 2.829a9 9 0 010 12.728M8.464 12.464a5 5 0 000-7.072m-2.828 2.829a9 9 0 000 12.728M12 18a6 6 0 006-6V9a6 6 0 00-12 0v3a6 6 0 006 6z"
+      />
+    </svg>
+  ),
+  Camera: () => (
+    <svg
+      className="w-6 h-6"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+      />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+      />
+    </svg>
+  ),
+  Gaming: () => (
+    <svg
+      className="w-6 h-6"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+      />
+    </svg>
+  ),
+  Watch: () => (
+    <svg
+      className="w-6 h-6"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
+    </svg>
+  ),
   Star: () => (
     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
@@ -135,9 +232,9 @@ const HeroSection = ({ onGetStarted }: { onGetStarted: () => void }) => (
             TechStore
           </h2>
           <p className="text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
-            Experimenta la plataforma de comercio multi-tenant de próxima
-            generación con búsqueda impulsada por IA, inventario en tiempo real
-            y seguridad de grado empresarial.
+            Descubre la mejor selección de smartphones, laptops, gaming, audio y
+            tecnología de última generación. Tu destino premium para toda la
+            tecnología que necesitas.
           </p>
         </div>
 
@@ -158,16 +255,16 @@ const HeroSection = ({ onGetStarted }: { onGetStarted: () => void }) => (
         {/* Stats */}
         <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto mt-16 pt-8 border-t border-white/10">
           <div className="text-center">
-            <div className="text-3xl font-bold text-white">99.9%</div>
-            <div className="text-slate-400 text-sm">Disponibilidad</div>
+            <div className="text-3xl font-bold text-white">5000+</div>
+            <div className="text-slate-400 text-sm">Productos Tech</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-white">10M+</div>
-            <div className="text-slate-400 text-sm">Productos</div>
+            <div className="text-3xl font-bold text-white">100+</div>
+            <div className="text-slate-400 text-sm">Marcas Premium</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-white">500K+</div>
-            <div className="text-slate-400 text-sm">Usuarios</div>
+            <div className="text-3xl font-bold text-white">24h</div>
+            <div className="text-slate-400 text-sm">Envío Express</div>
           </div>
         </div>
       </div>
@@ -181,50 +278,50 @@ const FeaturesSection = () => (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="text-center mb-16">
         <h3 className="text-4xl font-bold text-white mb-4">
-          Características de Vanguardia
+          La Mejor Tecnología a tu Alcance
         </h3>
         <p className="text-xl text-slate-400 max-w-2xl mx-auto">
-          Construido con tecnología de punta para la empresa moderna
+          Descubre la última tecnología en smartphones, laptops, gaming y más
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {[
           {
-            icon: <Icons.Lightning />,
-            title: "Súper Rápido",
+            icon: <Icons.Smartphone />,
+            title: "Smartphones Última Generación",
             description:
-              "Tiempos de respuesta inferiores a 100ms con edge computing y caché inteligente",
+              "Los últimos modelos de iPhone, Samsung, Google Pixel y más marcas premium",
           },
           {
-            icon: <Icons.Shield />,
-            title: "Seguridad Empresarial",
+            icon: <Icons.Laptop />,
+            title: "Laptops & Computadoras",
             description:
-              "Encriptación de grado bancario con autenticación multifactor y registros de auditoría",
+              "Gaming, trabajo y estudio. MacBooks, Dell, HP, Lenovo y más con garantía extendida",
           },
           {
-            icon: <Icons.Chip />,
-            title: "Impulsado por IA",
+            icon: <Icons.Gaming />,
+            title: "Gaming & Entretenimiento",
             description:
-              "Recomendaciones inteligentes y análisis predictivos que impulsan las conversiones",
+              "Consolas, PC Gaming, VR y accesorios para la mejor experiencia de juego",
           },
           {
-            icon: <Icons.Globe />,
-            title: "Escala Global",
+            icon: <Icons.Headphones />,
+            title: "Audio Premium",
             description:
-              "Despliegue multi-región con failover automático y balanceador de carga",
+              "Auriculares, speakers y sistemas de audio de las mejores marcas del mundo",
           },
           {
-            icon: <Icons.Lightning />,
-            title: "Sincronización en Tiempo Real",
+            icon: <Icons.Camera />,
+            title: "Fotografía & Video",
             description:
-              "Actualizaciones instantáneas de inventario en todos los canales y ubicaciones",
+              "Cámaras DSLR, mirrorless, drones y equipos profesionales de fotografía",
           },
           {
-            icon: <Icons.Shield />,
-            title: "Multi-Tenant",
+            icon: <Icons.Watch />,
+            title: "Wearables & Smart Tech",
             description:
-              "Aislamiento completo de datos con eficiencia de infraestructura compartida",
+              "Apple Watch, fitness trackers, smart home y dispositivos inteligentes",
           },
         ].map((feature, index) => (
           <div

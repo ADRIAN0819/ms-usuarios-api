@@ -3,7 +3,15 @@ import LandingPage from "./LandingPage";
 import LoginScreen from "./components/LoginScreen";
 import RegisterScreen from "./components/RegisterScreen";
 import ProductList from "./components/ProductList";
-import type { Product, CartItem, Compra, ProductForm, UserInfo } from "./types";
+import Notification from "./components/Notification";
+import type {
+  Product,
+  CartItem,
+  Compra,
+  ProductForm,
+  UserInfo,
+  NotificationData,
+} from "./types";
 
 // API URLs
 const API_URLS = {
@@ -680,10 +688,11 @@ function App() {
   });
 
   // User form states
-  const [userId, setUserId] = useState("user_test_postman");
-  const [password, setPassword] = useState("password123");
-  const [name, setName] = useState("Test User");
-  const [tenantId, setTenantId] = useState("empresa_postman");
+  const [userId, setUserId] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [name, setName] = useState("");
+  const [tenantId, setTenantId] = useState("");
 
   // Product states
   const [productos, setProductos] = useState<Product[]>([]);
@@ -714,10 +723,125 @@ function App() {
   const [response, setResponse] = useState("");
   const [activeTab, setActiveTab] = useState("productos");
 
+  // Notification system
+  const [notifications, setNotifications] = useState<NotificationData[]>([]);
+
+  const addNotification = (
+    message: string,
+    type: NotificationData["type"],
+    duration = 5000
+  ) => {
+    const id = Date.now().toString();
+    const notification: NotificationData = {
+      id,
+      message,
+      type,
+      duration,
+    };
+    setNotifications((prev) => [...prev, notification]);
+  };
+
+  const removeNotification = (id: string) => {
+    setNotifications((prev) =>
+      prev.filter((notification) => notification.id !== id)
+    );
+  };
+
+  // Validation functions
+  const validateUserData = (userData: {
+    userId: string;
+    password: string;
+    name?: string;
+    tenantId?: string;
+  }) => {
+    const errors = [];
+
+    if (!userData.userId || userData.userId.trim().length < 3) {
+      errors.push("El ID de usuario debe tener al menos 3 caracteres");
+    }
+
+    if (!userData.password || userData.password.length < 6) {
+      errors.push("La contraseña debe tener al menos 6 caracteres");
+    }
+
+    if (
+      userData.name !== undefined &&
+      (!userData.name || userData.name.trim().length < 2)
+    ) {
+      errors.push("El nombre debe tener al menos 2 caracteres");
+    }
+
+    if (
+      userData.tenantId !== undefined &&
+      (!userData.tenantId || userData.tenantId.trim().length < 2)
+    ) {
+      errors.push("El ID de organización debe tener al menos 2 caracteres");
+    }
+
+    return errors;
+  };
+
+  const getErrorMessage = (
+    status: number,
+    data: { mensaje?: string; error?: string }
+  ) => {
+    switch (status) {
+      case 400:
+        return (
+          data.mensaje || "Datos inválidos. Verifica la información enviada."
+        );
+      case 401:
+        return "Credenciales incorrectas. Verifica tu usuario y contraseña.";
+      case 403:
+        return "Acceso denegado. No tienes permisos para realizar esta acción.";
+      case 404:
+        return "Usuario no encontrado. Verifica que el usuario esté registrado.";
+      case 409:
+        return "El usuario ya existe. Intenta con un ID de usuario diferente.";
+      case 422:
+        return "Datos incorrectos. Algunos campos no tienen el formato válido.";
+      case 500:
+        return "Error interno del servidor. Intenta nuevamente en unos minutos.";
+      case 503:
+        return "Servicio no disponible temporalmente. Intenta más tarde.";
+      default:
+        return (
+          data.mensaje ||
+          data.error ||
+          "Error inesperado. Contacta al soporte técnico."
+        );
+    }
+  };
+
   // Authentication functions
   const handleCreateUser = async () => {
     setLoading(true);
     setResponse(""); // Clear previous messages
+
+    // Client-side validation
+    const validationErrors = validateUserData({
+      userId: userId.trim(),
+      password,
+      name: name.trim(),
+      tenantId: tenantId.trim(),
+    });
+
+    if (validationErrors.length > 0) {
+      const errorMsg = `Errores de validación: ${validationErrors.join(", ")}`;
+      addNotification(errorMsg, "warning");
+      setResponse(
+        JSON.stringify(
+          {
+            mensaje: errorMsg,
+          },
+          null,
+          2
+        )
+      );
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch(`${API_URLS.MS1}/usuarios/crear`, {
         method: "POST",
@@ -725,40 +849,79 @@ function App() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          user_id: userId,
-          name: name,
+          user_id: userId.trim(),
+          name: name.trim(),
           password: password,
-          tenant_id: tenantId,
+          tenant_id: tenantId.trim(),
         }),
       });
 
       const data = await res.json();
 
+      // Debug logging to see what the server is returning
+      console.log("Registration response status:", res.status);
+      console.log("Registration response data:", data);
+
       // Check if the registration was successful
-      if (
-        res.ok &&
-        (data.mensaje?.includes("exitosamente") ||
-          data.mensaje?.includes("creado"))
-      ) {
-        setResponse(
-          JSON.stringify(
-            { mensaje: "¡Usuario registrado exitosamente!" },
-            null,
-            2
-          )
-        );
+      // If we get a 2xx status code, consider it success
+      const isSuccess = res.ok; // res.ok is true for status 200-299
+
+      if (isSuccess) {
+        // Use the server message if available, otherwise use our own
+        const successMessage =
+          data.message ||
+          data.mensaje ||
+          "¡Usuario registrado exitosamente! Te redirigiremos al login.";
+        addNotification(successMessage, "success", 3000);
+        setResponse(JSON.stringify({ mensaje: successMessage }, null, 2));
         setTimeout(() => {
           setResponse(""); // Clear message before switching views
           setCurrentView("login");
-        }, 2000);
+          // Pre-fill login form with registration data
+          // Keep userId and password from registration
+          // Clear only name and tenantId as they're not needed for login
+          setName("");
+          setTenantId("");
+          // Show notification about pre-filled data
+          addNotification(
+            "Datos listos para el login. ¡Solo haz clic en Iniciar Sesión!",
+            "info",
+            4000
+          );
+        }, 3000);
       } else {
-        // Show error message
-        const errorMsg = data.mensaje || data.error || "Error en el registro";
+        // Show specific error message based on status code
+        console.log("Registration failed with status:", res.status);
+        console.log("Server error response:", data);
+
+        // Try to get the most appropriate error message
+        let errorMsg;
+        if (data.mensaje) {
+          errorMsg = data.mensaje;
+        } else if (data.message) {
+          errorMsg = data.message;
+        } else if (data.error) {
+          errorMsg = data.error;
+        } else {
+          errorMsg = getErrorMessage(res.status, data);
+        }
+
+        addNotification(errorMsg, "error");
         setResponse(JSON.stringify({ mensaje: errorMsg }, null, 2));
       }
     } catch (error) {
+      console.error("Registration error:", error);
+      const errorMsg =
+        "Error de conexión. Verifica tu conexión a internet e intenta nuevamente.";
+      addNotification(errorMsg, "error");
       setResponse(
-        JSON.stringify({ mensaje: `Error de conexión: ${error}` }, null, 2)
+        JSON.stringify(
+          {
+            mensaje: errorMsg,
+          },
+          null,
+          2
+        )
       );
     }
     setLoading(false);
@@ -767,6 +930,29 @@ function App() {
   const handleLogin = async () => {
     setLoading(true);
     setResponse(""); // Clear previous messages
+
+    // Client-side validation
+    const validationErrors = validateUserData({
+      userId: userId.trim(),
+      password,
+    });
+
+    if (validationErrors.length > 0) {
+      const errorMsg = `Errores de validación: ${validationErrors.join(", ")}`;
+      addNotification(errorMsg, "warning");
+      setResponse(
+        JSON.stringify(
+          {
+            mensaje: errorMsg,
+          },
+          null,
+          2
+        )
+      );
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch(`${API_URLS.MS1}/usuarios/login`, {
         method: "POST",
@@ -774,7 +960,7 @@ function App() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          user_id: userId,
+          user_id: userId.trim(),
           password: password,
         }),
       });
@@ -783,6 +969,7 @@ function App() {
 
       // Check if login was successful
       if (res.ok && data.token) {
+        addNotification(`¡Bienvenido, ${data.user_id}!`, "success", 3000);
         setToken(data.token);
         setUserInfo({ user_id: data.user_id, tenant_id: data.tenant_id });
         setIsAuthenticated(true);
@@ -791,22 +978,36 @@ function App() {
         setCurrentOffset(0);
         setHasMore(true);
         loadProductos(0, false);
+        // Clear form fields
+        setUserId("");
+        setPassword("");
         // Don't show response for successful login
       } else {
-        // Show error message
-        const errorMsg =
-          data.mensaje || data.error || "Credenciales incorrectas";
+        // Show specific error message based on status code
+        const errorMsg = getErrorMessage(res.status, data);
+        addNotification(errorMsg, "error");
         setResponse(JSON.stringify({ mensaje: errorMsg }, null, 2));
       }
     } catch (error) {
+      console.error("Login error:", error);
+      const errorMsg =
+        "Error de conexión. Verifica tu conexión a internet e intenta nuevamente.";
+      addNotification(errorMsg, "error");
       setResponse(
-        JSON.stringify({ mensaje: `Error de conexión: ${error}` }, null, 2)
+        JSON.stringify(
+          {
+            mensaje: errorMsg,
+          },
+          null,
+          2
+        )
       );
     }
     setLoading(false);
   };
 
   const handleLogout = () => {
+    addNotification("Sesión cerrada exitosamente", "info", 2000);
     setToken("");
     setUserInfo({ user_id: "", tenant_id: "" });
     setIsAuthenticated(false);
@@ -815,6 +1016,12 @@ function App() {
     setProductos([]);
     setCompras([]);
     setResponse(""); // Clear any previous error messages
+    // Clear sensitive form data
+    setUserId("");
+    setPassword("");
+    setShowPassword(false);
+    setName("");
+    setTenantId("");
     // Reset pagination state
     setCurrentOffset(0);
     setHasMore(true);
@@ -825,24 +1032,24 @@ function App() {
   const loadProductos = async (offset = 0, append = false) => {
     try {
       const url = `${API_URLS.MS2}/productos/listar?limit=${PAGE_SIZE}&offset=${offset}`;
-      
+
       const res = await fetch(url, {
         headers: { "Content-Type": "application/json" },
       });
       const data = await res.json();
-      
+
       if (data.productos) {
         if (append) {
-          setProductos(prev => [...prev, ...data.productos]);
+          setProductos((prev) => [...prev, ...data.productos]);
         } else {
           setProductos(data.productos);
           setFilteredProducts(data.productos);
         }
-        
+
         // Update pagination info
         const hasMoreProducts = data.pagination?.hasMore || false;
         const nextOffset = data.pagination?.nextOffset || offset + PAGE_SIZE;
-        
+
         setHasMore(hasMoreProducts);
         setCurrentOffset(nextOffset);
       }
@@ -853,7 +1060,7 @@ function App() {
 
   const loadMoreProducts = async () => {
     if (loadingMore || !hasMore) return;
-    
+
     setLoadingMore(true);
     await loadProductos(currentOffset, true);
     setLoadingMore(false);
@@ -1163,6 +1370,8 @@ function App() {
           setUserId={setUserId}
           password={password}
           setPassword={setPassword}
+          showPassword={showPassword}
+          setShowPassword={setShowPassword}
           handleLogin={handleLogin}
           loading={loading}
           setCurrentView={setCurrentView}
@@ -1177,6 +1386,8 @@ function App() {
           setUserId={setUserId}
           password={password}
           setPassword={setPassword}
+          showPassword={showPassword}
+          setShowPassword={setShowPassword}
           name={name}
           setName={setName}
           tenantId={tenantId}
@@ -1321,6 +1532,17 @@ function App() {
           )}
         </div>
       )}
+
+      {/* Notification System */}
+      {notifications.map((notification) => (
+        <Notification
+          key={notification.id}
+          message={notification.message}
+          type={notification.type}
+          onClose={() => removeNotification(notification.id)}
+          duration={notification.duration}
+        />
+      ))}
     </div>
   );
 }

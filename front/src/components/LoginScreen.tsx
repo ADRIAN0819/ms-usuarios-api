@@ -1,4 +1,5 @@
 import React from "react";
+import PasswordInput from "./PasswordInput";
 import type { LoginScreenProps } from "../types";
 
 // Icons
@@ -77,6 +78,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
   setUserId,
   password,
   setPassword,
+  showPassword,
+  setShowPassword,
   handleLogin,
   loading,
   setCurrentView,
@@ -118,25 +121,21 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
             </div>
             <input
               type="text"
-              placeholder="User ID"
+              placeholder="ID de Usuario (ej: juan123)"
               value={userId}
               onChange={(e) => setUserId(e.target.value)}
               className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all backdrop-blur-sm"
             />
           </div>
 
-          <div className="relative group">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-400 transition-colors">
-              <Icons.Lock />
-            </div>
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all backdrop-blur-sm"
-            />
-          </div>
+          <PasswordInput
+            value={password}
+            onChange={setPassword}
+            placeholder="Contraseña (mínimo 6 caracteres)"
+            showPassword={showPassword}
+            onToggleVisibility={() => setShowPassword(!showPassword)}
+            focusColor="focus:ring-blue-500"
+          />
         </div>
 
         {/* Buttons */}
@@ -147,7 +146,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
             className="w-full bg-gradient-to-r from-blue-600 to-violet-600 text-white py-3 px-4 rounded-xl font-medium hover:from-blue-700 hover:to-violet-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2 shadow-lg"
           >
             {loading ? <LoadingSpinner /> : <Icons.Shield />}
-            {loading ? "Authenticating..." : "Sign In"}
+            {loading ? "Verificando credenciales..." : "Iniciar Sesión"}
           </button>
 
           <button
@@ -162,19 +161,78 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
           </button>
         </div>
 
-        {/* Response */}
+        {/* Response Messages */}
         {response && (
-          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 backdrop-blur-sm">
-            <p className="text-red-400 text-sm font-mono">
-              {(() => {
-                try {
-                  const parsed = JSON.parse(response);
-                  return parsed.mensaje || "Error de autenticación";
-                } catch {
-                  return response;
-                }
-              })()}
-            </p>
+          <div
+            className={`border rounded-xl p-4 backdrop-blur-sm transition-all duration-300 ${
+              response.includes("exitoso") ||
+              response.includes("bienvenido") ||
+              response.includes("correcta")
+                ? "bg-emerald-500/10 border-emerald-500/20"
+                : "bg-red-500/10 border-red-500/20"
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <div
+                className={`flex-shrink-0 w-5 h-5 mt-0.5 ${
+                  response.includes("exitoso") ||
+                  response.includes("bienvenido") ||
+                  response.includes("correcta")
+                    ? "text-emerald-400"
+                    : "text-red-400"
+                }`}
+              >
+                {response.includes("exitoso") ||
+                response.includes("bienvenido") ||
+                response.includes("correcta") ? (
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                ) : (
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                )}
+              </div>
+              <div className="flex-1">
+                <p
+                  className={`text-sm font-medium ${
+                    response.includes("exitoso") ||
+                    response.includes("bienvenido") ||
+                    response.includes("correcta")
+                      ? "text-emerald-400"
+                      : "text-red-400"
+                  }`}
+                >
+                  {(() => {
+                    try {
+                      const parsed = JSON.parse(response);
+                      return parsed.mensaje || "Error de autenticación";
+                    } catch {
+                      return response;
+                    }
+                  })()}
+                </p>
+                {!response.includes("exitoso") &&
+                  !response.includes("bienvenido") &&
+                  !response.includes("correcta") && (
+                    <p className="text-slate-400 text-xs mt-1">
+                      Verifica que tus credenciales sean correctas e intenta
+                      nuevamente.
+                    </p>
+                  )}
+              </div>
+            </div>
           </div>
         )}
       </div>
