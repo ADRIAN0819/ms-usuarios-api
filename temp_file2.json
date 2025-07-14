@@ -1,0 +1,34 @@
+{
+  "compra_id": "4cb23045-6b29-4206-b4cc-fb8459eea71b",
+  "user_id": "mateo",
+  "tenant_id": "utec",
+  "fecha": "2025-07-13 19:56:36",
+  "productos": [
+    {
+      "codigo": "cel25",
+      "nombre": "Celular",
+      "precio_unitario": 200.0,
+      "cantidad": 1
+    },
+    {
+      "codigo": "TEST002",
+      "nombre": "Segundo Producto Test",
+      "precio_unitario": 149.99,
+      "cantidad": 1
+    }
+  ],
+  "metadata": {
+    "event_name": "INSERT",
+    "event_source": "aws:dynamodb",
+    "aws_region": "us-east-1",
+    "processed_at": "2025-07-14T00:02:00.765997",
+    "processed_by": "lambda-streams-actualizador-compras",
+    "stage": "dev"
+  },
+  "resumen": {
+    "total_productos": 2,
+    "total_cantidad": 2,
+    "total_precio": 349.99,
+    "moneda": "USD"
+  }
+}

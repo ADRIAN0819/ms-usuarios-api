@@ -1,0 +1,34 @@
+{
+  "compra_id": "03bb0774-f6d0-4d50-9376-3c80450c1180",
+  "user_id": "user_test_postman",
+  "tenant_id": "empresa_postman",
+  "fecha": "2025-07-13 19:23:47",
+  "productos": [
+    {
+      "codigo": "L1",
+      "nombre": "Laptop1",
+      "precio_unitario": 10.0,
+      "cantidad": 1
+    },
+    {
+      "codigo": "PROD002",
+      "nombre": "Laptop Gaming",
+      "precio_unitario": 1299.99,
+      "cantidad": 1
+    }
+  ],
+  "metadata": {
+    "event_name": "INSERT",
+    "event_source": "aws:dynamodb",
+    "aws_region": "us-east-1",
+    "processed_at": "2025-07-14T00:01:45.091402",
+    "processed_by": "lambda-streams-actualizador-compras",
+    "stage": "dev"
+  },
+  "resumen": {
+    "total_productos": 2,
+    "total_cantidad": 2,
+    "total_precio": 1309.99,
+    "moneda": "USD"
+  }
+}

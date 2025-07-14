@@ -1,0 +1,25 @@
+{
+  "timestamp": "2025-07-13T21:00:00Z",
+  "database": "dev-compras-datacatalog",
+  "successful_queries": [
+    {
+      "name": "COUNT total registros tabla 13",
+      "query": "SELECT COUNT(*) as total_registros FROM \"dev-compras-datacatalog\".\"13\"",
+      "query_id": "57a85dcd-8830-4aea-bc12-e055ed2e399c",
+      "status": "SUCCESS"
+    },
+    {
+      "name": "COUNT total registros tabla compras_all_json",
+      "query": "SELECT COUNT(*) as total_registros FROM \"dev-compras-datacatalog\".\"compras_all_json\"",
+      "query_id": "cb182fb8-78a7-490a-a512-75c9b3931818",
+      "status": "SUCCESS"
+    },
+    {
+      "name": "SHOW DATABASES",
+      "query": "SHOW DATABASES",
+      "query_id": "8ebb3f36-9437-43c1-b581-ad4dba39b220",
+      "status": "SUCCESS"
+    }
+  ],
+  "total_successful": 3
+}
