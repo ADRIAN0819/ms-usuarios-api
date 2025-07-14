@@ -253,6 +253,36 @@ const Icons = {
       />
     </svg>
   ),
+  Edit: () => (
+    <svg
+      className="w-5 h-5"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+      />
+    </svg>
+  ),
+  Save: () => (
+    <svg
+      className="w-5 h-5"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
+      />
+    </svg>
+  ),
 };
 
 // Modern Loading Component
@@ -339,12 +369,16 @@ const SearchSection: React.FC<{
   filteredProducts: Product[];
   setSelectedProduct: (product: Product | null) => void;
   addToCart: (product: Product, quantity?: number) => void;
+  onEditProduct: (product: Product) => void;
+  onDeleteProduct: (product: Product) => void;
 }> = ({
   searchTerm,
   setSearchTerm,
   filteredProducts,
   setSelectedProduct,
   addToCart,
+  onEditProduct,
+  onDeleteProduct,
 }) => (
   <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-lg">
     <div className="mb-6">
@@ -411,6 +445,20 @@ const SearchSection: React.FC<{
                 >
                   <Icons.Eye />
                   View
+                </button>
+                <button
+                  onClick={() => onEditProduct(product)}
+                  className="flex-1 bg-yellow-500/20 text-yellow-400 py-2 px-3 rounded-lg text-sm hover:bg-yellow-500/30 transition-all duration-200 flex items-center justify-center gap-1 font-medium"
+                >
+                  <Icons.Edit />
+                  Edit
+                </button>
+                <button
+                  onClick={() => onDeleteProduct(product)}
+                  className="flex-1 bg-red-500/20 text-red-400 py-2 px-3 rounded-lg text-sm hover:bg-red-500/30 transition-all duration-200 flex items-center justify-center gap-1 font-medium"
+                >
+                  <Icons.Trash />
+                  Delete
                 </button>
                 <button
                   onClick={() => addToCart(product)}
@@ -707,6 +755,12 @@ function App() {
     cantidad: "",
     categoria: "",
   });
+
+  // Product editing states
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
   // Pagination states
   const [currentOffset, setCurrentOffset] = useState(0);
@@ -1235,6 +1289,7 @@ function App() {
         (data.mensaje?.includes("exitosamente") ||
           data.mensaje?.includes("creado"))
       ) {
+        addNotification("¡Producto creado exitosamente!", "success");
         setResponse(
           JSON.stringify({ mensaje: "¡Producto creado exitosamente!" }, null, 2)
         );
@@ -1252,12 +1307,118 @@ function App() {
       } else {
         const errorMsg =
           data.mensaje || data.error || "Error al crear producto";
+        addNotification(errorMsg, "error");
         setResponse(JSON.stringify({ mensaje: errorMsg }, null, 2));
       }
     } catch (error) {
-      setResponse(
-        JSON.stringify({ mensaje: `Error de conexión: ${error}` }, null, 2)
-      );
+      const errorMsg = `Error de conexión: ${error}`;
+      addNotification(errorMsg, "error");
+      setResponse(JSON.stringify({ mensaje: errorMsg }, null, 2));
+    }
+    setLoading(false);
+  };
+
+  // Function to modify a product
+  const modifyProduct = async (product: Product) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URLS.MS2}/productos/modificar`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          codigo: product.codigo,
+          nombre: product.nombre,
+          descripcion: product.descripcion,
+          precio: product.precio,
+          cantidad: product.cantidad,
+          categoria: product.categoria,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (
+        res.ok &&
+        (data.mensaje?.includes("exitosamente") ||
+          data.mensaje?.includes("modificado") ||
+          data.mensaje?.includes("actualizado"))
+      ) {
+        addNotification("¡Producto modificado exitosamente!", "success");
+        setResponse(
+          JSON.stringify(
+            { mensaje: "¡Producto modificado exitosamente!" },
+            null,
+            2
+          )
+        );
+        loadProductos(0, false);
+        setShowEditModal(false);
+        setEditingProduct(null);
+        // Clear success message after 3 seconds
+        setTimeout(() => setResponse(""), 3000);
+      } else {
+        const errorMsg =
+          data.mensaje || data.error || "Error al modificar producto";
+        addNotification(errorMsg, "error");
+        setResponse(JSON.stringify({ mensaje: errorMsg }, null, 2));
+      }
+    } catch (error) {
+      const errorMsg = `Error de conexión: ${error}`;
+      addNotification(errorMsg, "error");
+      setResponse(JSON.stringify({ mensaje: errorMsg }, null, 2));
+    }
+    setLoading(false);
+  };
+
+  // Function to delete a product
+  const deleteProduct = async (codigo: string) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URLS.MS2}/productos/eliminar`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          codigo: codigo,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (
+        res.ok &&
+        (data.mensaje?.includes("exitosamente") ||
+          data.mensaje?.includes("eliminado") ||
+          data.mensaje?.includes("correctamente"))
+      ) {
+        addNotification("¡Producto eliminado exitosamente!", "success");
+        setResponse(
+          JSON.stringify(
+            { mensaje: "¡Producto eliminado exitosamente!" },
+            null,
+            2
+          )
+        );
+        loadProductos(0, false);
+        setShowDeleteModal(false);
+        setProductToDelete(null);
+        // Clear success message after 3 seconds
+        setTimeout(() => setResponse(""), 3000);
+      } else {
+        const errorMsg =
+          data.mensaje || data.error || "Error al eliminar producto";
+        addNotification(errorMsg, "error");
+        setResponse(JSON.stringify({ mensaje: errorMsg }, null, 2));
+      }
+    } catch (error) {
+      const errorMsg = `Error de conexión: ${error}`;
+      addNotification(errorMsg, "error");
+      setResponse(JSON.stringify({ mensaje: errorMsg }, null, 2));
     }
     setLoading(false);
   };
@@ -1277,6 +1438,26 @@ function App() {
     } else {
       setCart([...cart, { ...product, cantidad: quantity }]);
     }
+  };
+
+  // Handle edit product modal
+  const handleEditProduct = (product: Product) => {
+    setEditingProduct(product);
+    setShowEditModal(true);
+  };
+
+  // Handle delete product modal
+  const handleDeleteProduct = (product: Product) => {
+    setProductToDelete(product);
+    setShowDeleteModal(true);
+  };
+
+  // Close modals
+  const closeModals = () => {
+    setShowEditModal(false);
+    setShowDeleteModal(false);
+    setEditingProduct(null);
+    setProductToDelete(null);
   };
 
   const removeFromCart = (codigo: string) => {
@@ -1414,6 +1595,8 @@ function App() {
                   filteredProducts={filteredProducts}
                   setSelectedProduct={setSelectedProduct}
                   addToCart={addToCart}
+                  onEditProduct={handleEditProduct}
+                  onDeleteProduct={handleDeleteProduct}
                 />
 
                 <ProductForm
@@ -1507,6 +1690,179 @@ function App() {
                   <Icons.ShoppingCart />
                   Add to Cart
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* Edit Product Modal */}
+          {showEditModal && editingProduct && (
+            <div
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+              onClick={closeModals}
+            >
+              <div
+                className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20 max-w-lg w-full shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex justify-between items-start mb-6">
+                  <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+                    <Icons.Edit />
+                    Edit Product
+                  </h3>
+                  <button
+                    onClick={closeModals}
+                    className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+                  >
+                    <Icons.X />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 mb-6">
+                  <input
+                    placeholder="Product Code"
+                    value={editingProduct.codigo}
+                    disabled
+                    className="px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-slate-400 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all backdrop-blur-sm cursor-not-allowed"
+                  />
+                  <input
+                    placeholder="Product Name"
+                    value={editingProduct.nombre}
+                    onChange={(e) =>
+                      setEditingProduct({
+                        ...editingProduct,
+                        nombre: e.target.value,
+                      })
+                    }
+                    className="px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all backdrop-blur-sm"
+                  />
+                  <input
+                    placeholder="Description"
+                    value={editingProduct.descripcion}
+                    onChange={(e) =>
+                      setEditingProduct({
+                        ...editingProduct,
+                        descripcion: e.target.value,
+                      })
+                    }
+                    className="px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all backdrop-blur-sm"
+                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <input
+                      type="number"
+                      placeholder="Price"
+                      value={editingProduct.precio}
+                      onChange={(e) =>
+                        setEditingProduct({
+                          ...editingProduct,
+                          precio: parseFloat(e.target.value) || 0,
+                        })
+                      }
+                      className="px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all backdrop-blur-sm"
+                    />
+                    <input
+                      type="number"
+                      placeholder="Quantity"
+                      value={editingProduct.cantidad}
+                      onChange={(e) =>
+                        setEditingProduct({
+                          ...editingProduct,
+                          cantidad: parseInt(e.target.value) || 0,
+                        })
+                      }
+                      className="px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all backdrop-blur-sm"
+                    />
+                  </div>
+                  <input
+                    placeholder="Category"
+                    value={editingProduct.categoria}
+                    onChange={(e) =>
+                      setEditingProduct({
+                        ...editingProduct,
+                        categoria: e.target.value,
+                      })
+                    }
+                    className="px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all backdrop-blur-sm"
+                  />
+                </div>
+
+                <div className="flex gap-4">
+                  <button
+                    onClick={closeModals}
+                    className="flex-1 bg-slate-500/20 text-slate-400 py-3 px-4 rounded-xl font-medium hover:bg-slate-500/30 transition-all duration-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => modifyProduct(editingProduct)}
+                    disabled={loading}
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-violet-600 text-white py-3 px-4 rounded-xl font-medium hover:from-blue-700 hover:to-violet-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
+                  >
+                    {loading ? <LoadingSpinner /> : <Icons.Save />}
+                    {loading ? "Saving..." : "Save Changes"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Delete Product Modal */}
+          {showDeleteModal && productToDelete && (
+            <div
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+              onClick={closeModals}
+            >
+              <div
+                className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20 max-w-md w-full shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex justify-between items-start mb-6">
+                  <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+                    <Icons.Trash />
+                    Delete Product
+                  </h3>
+                  <button
+                    onClick={closeModals}
+                    className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+                  >
+                    <Icons.X />
+                  </button>
+                </div>
+
+                <div className="mb-6">
+                  <p className="text-slate-300 mb-4">
+                    Are you sure you want to delete this product? This action
+                    cannot be undone.
+                  </p>
+
+                  <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+                    <h4 className="text-red-400 font-medium mb-2">
+                      {productToDelete.nombre}
+                    </h4>
+                    <p className="text-slate-400 text-sm">
+                      Code: {productToDelete.codigo}
+                    </p>
+                    <p className="text-slate-400 text-sm">
+                      Price: ${productToDelete.precio}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <button
+                    onClick={closeModals}
+                    className="flex-1 bg-slate-500/20 text-slate-400 py-3 px-4 rounded-xl font-medium hover:bg-slate-500/30 transition-all duration-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => deleteProduct(productToDelete.codigo)}
+                    disabled={loading}
+                    className="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white py-3 px-4 rounded-xl font-medium hover:from-red-700 hover:to-red-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
+                  >
+                    {loading ? <LoadingSpinner /> : <Icons.Trash />}
+                    {loading ? "Deleting..." : "Delete Product"}
+                  </button>
+                </div>
               </div>
             </div>
           )}
