@@ -1,0 +1,168 @@
+org: adrianurbinamendoza
+service: compras-stream-simple
+
+provider:
+  name: aws
+  runtime: python3.11
+  memorySize: 1024
+  timeout: 30
+  region: us-east-1
+  environment:
+    COMPRAS_BUCKET: ${self:custom.bucketName}
+    COMPRAS_TABLE: ${self:custom.comprasTable}
+    STAGE: ${sls:stage}
+  iam:
+    role: arn:aws:iam::254780740814:role/LabRole
+
+custom:
+  bucketName: ${sls:stage}-compras-simple-bucket
+  comprasTable: ${sls:stage}-t_MS3_compras
+
+functions:
+  actualizarComprasStream:
+    handler: lambdas/actualizar_compras_stream.lambda_handler
+    description: "Procesa cambios en DynamoDB Streams de compras y actualiza archivos en S3"
+    events:
+      - stream:
+          type: dynamodb
+          arn: arn:aws:dynamodb:us-east-1:254780740814:table/dev-t_MS3_compras/stream/2025-07-13T11:25:00.496
+          batchSize: 10
+          startingPosition: TRIM_HORIZON
+    environment:
+      BUCKET_NAME: ${self:custom.bucketName}
+      TABLE_NAME: ${self:custom.comprasTable}
+
+resources:
+  Resources:
+    # Database en AWS Glue Data Catalog
+    ComprasGlueDatabase:
+      Type: AWS::Glue::Database
+      Properties:
+        CatalogId: !Ref AWS::AccountId
+        DatabaseInput:
+          Name: ${sls:stage}-compras-datacatalog
+          Description: "Base de datos para analizar compras con Athena"
+
+    # Tabla en Glue Data Catalog para los archivos JSON de compras
+    ComprasGlueTable:
+      Type: AWS::Glue::Table
+      Properties:
+        CatalogId: !Ref AWS::AccountId
+        DatabaseName: !Ref ComprasGlueDatabase
+        TableInput:
+          Name: compras_json
+          Description: "Tabla para consultar compras desde archivos JSON en S3"
+          TableType: EXTERNAL_TABLE
+          Parameters:
+            "projection.enabled": "true"
+            "projection.tenant_id.type": "enum"
+            "projection.tenant_id.values": "test-tenant,test-tenant-direct,prod-tenant"
+            "projection.year.type": "integer"
+            "projection.year.range": "2024,2030"
+            "projection.year.interval": "1"
+            "projection.month.type": "integer"
+            "projection.month.range": "1,12"
+            "projection.month.interval": "1"
+            "projection.day.type": "integer"
+            "projection.day.range": "1,31"
+            "projection.day.interval": "1"
+            "storage.location.template": "s3://${self:custom.bucketName}/compras/$${tenant_id}/$${year}/$${month}/$${day}/"
+            "classification": "json"
+            "compressionType": "none"
+            "typeOfData": "file"
+          StorageDescriptor:
+            Columns:
+              - Name: compra_id
+                Type: string
+                Comment: "ID único de la compra"
+              - Name: user_id
+                Type: string
+                Comment: "ID del usuario que realizó la compra"
+              - Name: tenant_id
+                Type: string
+                Comment: "ID del tenant"
+              - Name: fecha
+                Type: string
+                Comment: "Fecha de la compra"
+              - Name: productos
+                Type: array<struct<codigo:string,nombre:string,precio_unitario:double,cantidad:int>>
+                Comment: "Lista de productos comprados"
+              - Name: resumen
+                Type: struct<total_productos:int,total_cantidad:int,total_precio:double,moneda:string>
+                Comment: "Resumen de totales de la compra"
+              - Name: metadata
+                Type: struct<event_name:string,event_source:string,aws_region:string,processed_at:string,processed_by:string,stage:string>
+                Comment: "Metadata del procesamiento"
+            Location: !Sub "s3://${self:custom.bucketName}/compras/"
+            InputFormat: org.apache.hadoop.mapred.TextInputFormat
+            OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+            SerdeInfo:
+              SerializationLibrary: org.openx.data.jsonserde.JsonSerDe
+              Parameters:
+                "serialization.format": "1"
+          PartitionKeys:
+            - Name: tenant_id
+              Type: string
+              Comment: "Partición por tenant"
+            - Name: year
+              Type: string
+              Comment: "Partición por año"
+            - Name: month
+              Type: string
+              Comment: "Partición por mes"
+            - Name: day
+              Type: string
+              Comment: "Partición por día"
+
+    ComprasBackupBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.bucketName}
+        VersioningConfiguration:
+          Status: Enabled
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: true
+          BlockPublicPolicy: true
+          IgnorePublicAcls: true
+          RestrictPublicBuckets: true
+
+  Outputs:
+    ComprasGlueDatabaseName:
+      Description: "Nombre de la base de datos en AWS Glue Data Catalog"
+      Value: !Ref ComprasGlueDatabase
+      Export:
+        Name: ${sls:stage}-ComprasGlueDatabaseName
+
+    ComprasGlueTableName:
+      Description: "Nombre de la tabla en AWS Glue Data Catalog"
+      Value: !Ref ComprasGlueTable
+      Export:
+        Name: ${sls:stage}-ComprasGlueTableName
+
+    ComprasBackupBucketName:
+      Description: "Nombre del bucket S3 para backup de compras"
+      Value: !Ref ComprasBackupBucket
+      Export:
+        Name: ${sls:stage}-ComprasBackupBucketName
+
+    ComprasBackupBucketArn:
+      Description: "ARN del bucket S3 para backup de compras"
+      Value: !GetAtt ComprasBackupBucket.Arn
+      Export:
+        Name: ${sls:stage}-ComprasBackupBucketArn
+
+plugins:
+  - serverless-python-requirements
+
+package:
+  patterns:
+    - '!node_modules/**'
+    - '!.venv/**'
+    - '!.pytest_cache/**'
+    - '!__pycache__/**'
+    - '!*.pyc'
+    - '!README.md'
+    - '!package.json'
+    - '!package-lock.json'
+    - 'lambdas/**'
+    - 'utils/**'

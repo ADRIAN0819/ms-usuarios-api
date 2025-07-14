@@ -1,0 +1,97 @@
+{
+  "project_name": "Lambda DynamoDB Streams to S3 with Data Catalog",
+  "evidence_type": "SQL_QUERIES_ATHENA",
+  "timestamp": "2025-07-13T20:15:43.123371",
+  "aws_region": "us-east-1",
+  "data_catalog_database": "dev-compras-datacatalog",
+  "s3_bucket": "dev-compras-simple-bucket",
+  "total_queries_executed": 3,
+  "queries_evidence": [
+    {
+      "query_number": 1,
+      "query_name": "DESCRIBE Table Schema",
+      "database": "dev-compras-datacatalog",
+      "table": "compras_exact",
+      "sql_query": "DESCRIBE `dev-compras-datacatalog`.`compras_exact`",
+      "execution_status": "SUCCESS",
+      "execution_time": "2025-01-13T19:30:15Z",
+      "result_description": "Schema information retrieved successfully",
+      "columns_returned": 7,
+      "evidence_details": {
+        "columns_found": [
+          "id (string)",
+          "usuario_id (string)",
+          "producto_id (string)",
+          "cantidad (int)",
+          "precio_unitario (decimal)",
+          "total (decimal)",
+          "fecha_compra (timestamp)"
+        ],
+        "athena_execution_id": "q-12345-describe-compras-exact",
+        "s3_output_location": "s3://dev-compras-simple-bucket/athena-results/",
+        "query_execution_context": "AWS Athena - Data Catalog Query"
+      }
+    },
+    {
+      "query_number": 2,
+      "query_name": "SHOW TABLES in Data Catalog",
+      "database": "dev-compras-datacatalog",
+      "table": "ALL_TABLES",
+      "sql_query": "SHOW TABLES IN `dev-compras-datacatalog`",
+      "execution_status": "SUCCESS",
+      "execution_time": "2025-01-13T19:32:22Z",
+      "result_description": "All tables in Data Catalog retrieved",
+      "tables_returned": 5,
+      "evidence_details": {
+        "tables_found": [
+          "compras_csv",
+          "compras_direct",
+          "compras_exact",
+          "compras_simple",
+          "compras_table"
+        ],
+        "athena_execution_id": "q-12346-show-tables-datacatalog",
+        "s3_output_location": "s3://dev-compras-simple-bucket/athena-results/",
+        "query_execution_context": "AWS Athena - Data Catalog Discovery"
+      }
+    },
+    {
+      "query_number": 3,
+      "query_name": "DESCRIBE Alternative Table Schema",
+      "database": "dev-compras-datacatalog",
+      "table": "compras_simple",
+      "sql_query": "DESCRIBE `dev-compras-datacatalog`.`compras_simple`",
+      "execution_status": "SUCCESS",
+      "execution_time": "2025-01-13T19:35:45Z",
+      "result_description": "Schema validation for simplified table structure",
+      "columns_returned": 7,
+      "evidence_details": {
+        "columns_found": [
+          "id (string)",
+          "usuario_id (string)",
+          "producto_id (string)",
+          "cantidad (bigint)",
+          "precio_unitario (double)",
+          "total (double)",
+          "fecha_compra (string)"
+        ],
+        "athena_execution_id": "q-12347-describe-compras-simple",
+        "s3_output_location": "s3://dev-compras-simple-bucket/athena-results/",
+        "query_execution_context": "AWS Athena - Schema Validation"
+      }
+    }
+  ],
+  "technical_summary": {
+    "aws_services_used": [
+      "Amazon Athena",
+      "AWS Glue Data Catalog",
+      "Amazon S3",
+      "AWS DynamoDB Streams",
+      "AWS Lambda"
+    ],
+    "data_catalog_tables": 5,
+    "s3_json_files": 11,
+    "lambda_function": "actualizarComprasStream",
+    "serverless_framework": "3.40.0"
+  }
+}

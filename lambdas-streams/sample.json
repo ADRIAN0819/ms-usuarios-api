@@ -1,0 +1,46 @@
+{
+  "compra_id": "6f0a17d1-9be2-4850-a903-19a997cc1094",
+  "user_id": "user_test_postman",
+  "tenant_id": "empresa_postman",
+  "fecha": "2025-07-13 21:47:16",
+  "productos": [
+    {
+      "codigo": "TECH003",
+      "nombre": "Samsung Galaxy S24 Ultra",
+      "precio_unitario": 1199.99,
+      "cantidad": 1
+    },
+    {
+      "codigo": "SMART001",
+      "nombre": "Microsoft Surface Pro 9",
+      "precio_unitario": 1599.99,
+      "cantidad": 2
+    },
+    {
+      "codigo": "TECH011",
+      "nombre": "Google Pixel 8 Pro",
+      "precio_unitario": 999.99,
+      "cantidad": 2
+    },
+    {
+      "codigo": "UTEC001",
+      "nombre": "UTEC Engineering Laptop",
+      "precio_unitario": 1899.99,
+      "cantidad": 2
+    }
+  ],
+  "metadata": {
+    "event_name": "INSERT",
+    "event_source": "aws:dynamodb",
+    "aws_region": "us-east-1",
+    "processed_at": "2025-07-14T00:02:02.234368",
+    "processed_by": "lambda-streams-actualizador-compras",
+    "stage": "dev"
+  },
+  "resumen": {
+    "total_productos": 4,
+    "total_cantidad": 7,
+    "total_precio": 10199.93,
+    "moneda": "USD"
+  }
+}
