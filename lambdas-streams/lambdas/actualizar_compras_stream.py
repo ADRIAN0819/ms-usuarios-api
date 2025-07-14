@@ -5,6 +5,8 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Any, Optional
 import logging
+import csv
+from io import StringIO
 
 # Configuración de logging
 logger = logging.getLogger()
@@ -179,6 +181,71 @@ def save_to_s3(compra_data: Dict[str, Any], s3_key: str) -> bool:
         logger.error(f"Bucket: {BUCKET_NAME}, Key: {s3_key}")
         return False
 
+def update_csv_analytics(compra_data: Dict[str, Any]) -> bool:
+    """
+    Actualiza el archivo CSV de analytics con la nueva compra
+    
+    Args:
+        compra_data: Datos de la compra
+        
+    Returns:
+        Bool indicando si se actualizó exitosamente
+    """
+    try:
+        csv_key = "analytics/compras_techshop.csv"
+        
+        # Leer CSV existente
+        try:
+            response = s3_client.get_object(Bucket=BUCKET_NAME, Key=csv_key)
+            existing_csv = response['Body'].read().decode('utf-8')
+            lines = existing_csv.strip().split('\n')
+            
+            # Verificar si ya existe esta compra
+            compra_id = compra_data.get('compra_id', '')
+            for line in lines[1:]:  # Saltar header
+                if line.startswith(compra_id):
+                    logger.info(f"Compra {compra_id} ya existe en CSV, no se actualiza")
+                    return True
+                    
+        except s3_client.exceptions.NoSuchKey:
+            # Si no existe el archivo, crear con header
+            lines = ['compra_id,user_id,tenant_id,fecha,total_productos,total_cantidad,total_precio']
+            logger.info("Archivo CSV no existe, creando nuevo con header")
+        
+        # Preparar nueva línea CSV
+        fecha_clean = compra_data.get('fecha', '').replace('T', ' ')
+        resumen = compra_data.get('resumen', {})
+        
+        nueva_linea = f"{compra_data.get('compra_id', '')}," \
+                     f"{compra_data.get('user_id', '')}," \
+                     f"{compra_data.get('tenant_id', '')}," \
+                     f"{fecha_clean}," \
+                     f"{resumen.get('total_productos', 0)}," \
+                     f"{resumen.get('total_cantidad', 0)}," \
+                     f"{resumen.get('total_precio', 0)}"
+        
+        # Agregar nueva línea
+        lines.append(nueva_linea)
+        
+        # Recrear CSV
+        csv_content = '\n'.join(lines)
+        
+        # Subir CSV actualizado
+        s3_client.put_object(
+            Bucket=BUCKET_NAME,
+            Key=csv_key,
+            Body=csv_content.encode('utf-8'),
+            ContentType='text/csv',
+            ServerSideEncryption='AES256'
+        )
+        
+        logger.info(f"CSV actualizado exitosamente: s3://{BUCKET_NAME}/{csv_key}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Error actualizando CSV: {str(e)}")
+        return False
+
 def process_stream_record(record: Dict[str, Any]) -> Dict[str, Any]:
     """
     Procesa un record individual del DynamoDB Stream
@@ -210,14 +277,25 @@ def process_stream_record(record: Dict[str, Any]) -> Dict[str, Any]:
         # Guardar en S3
         success = save_to_s3(compra_data, s3_key)
         
+        # Actualizar CSV de analytics solo para eventos INSERT
+        csv_success = False
+        if event_name == 'INSERT':
+            csv_success = update_csv_analytics(compra_data)
+        
         if success:
-            return {
+            result = {
                 'success': True,
                 'compra_id': compra_data.get('compra_id'),
                 'tenant_id': compra_data.get('tenant_id'),
                 's3_key': s3_key,
                 'event_name': event_name
             }
+            
+            # Agregar información del CSV si se procesó
+            if event_name == 'INSERT':
+                result['csv_updated'] = csv_success
+                
+            return result
         else:
             return {
                 'success': False,
