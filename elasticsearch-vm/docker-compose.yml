@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  elasticsearch-empresa-postman:
+    image: elasticsearch:8.14.0
+    container_name: es-empresa-postman
+    environment:
+      - node.name=es-empresa-postman
+      - cluster.name=techshop-empresa-postman
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+    networks:
+      - techshop-network
+    restart: unless-stopped
+      
+  elasticsearch-utec:
+    image: elasticsearch:8.14.0
+    container_name: es-utec
+    environment:
+      - node.name=es-utec
+      - cluster.name=techshop-utec
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9201:9200"
+    networks:
+      - techshop-network
+    restart: unless-stopped
+      
+  elasticsearch-default:
+    image: elasticsearch:8.14.0
+    container_name: es-default
+    environment:
+      - node.name=es-default
+      - cluster.name=techshop-default
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9202:9200"
+    networks:
+      - techshop-network
+    restart: unless-stopped
+      
+networks:
+  techshop-network:
+    driver: bridge

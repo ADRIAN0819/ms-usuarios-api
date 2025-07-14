@@ -1,0 +1,340 @@
+service: elasticsearch-vm-system
+frameworkVersion: '4'
+
+provider:
+  name: aws
+  runtime: python3.11
+  region: us-east-1
+  stage: dev
+  timeout: 900
+  memorySize: 512
+  
+  environment:
+    ES_VM_IP: "PLACEHOLDER_IP"
+    
+  iam:
+    role: arn:aws:iam::254780740814:role/LabRole
+
+functions:
+  actualizarProductosElasticsearch:
+    handler: lambdas/actualizar_productos_elasticsearch.handler
+    events:
+      - stream:
+          type: dynamodb
+          arn: "arn:aws:dynamodb:us-east-1:254780740814:table/dev-t_MS2_productos/stream/2025-07-13T11:24:21.156"
+          batchSize: 10
+          startingPosition: LATEST
+          enabled: true
+    environment:
+      ES_ENDPOINTS: |
+        {
+          "empresa_postman": "http://PLACEHOLDER_IP:9200",
+          "utec": "http://PLACEHOLDER_IP:9201",
+          "default": "http://PLACEHOLDER_IP:9202"
+        }
+
+resources:
+  Resources:
+    # Security Group for ElasticSearch VM
+    ElasticSearchSecurityGroup:
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupDescription: Security group for ElasticSearch VM
+        GroupName: elasticsearch-vm-sg
+        SecurityGroupIngress:
+          - IpProtocol: tcp
+            FromPort: 22
+            ToPort: 22
+            CidrIp: 0.0.0.0/0
+          - IpProtocol: tcp
+            FromPort: 9200
+            ToPort: 9210
+            CidrIp: 0.0.0.0/0
+          - IpProtocol: tcp
+            FromPort: 5601
+            ToPort: 5610
+            CidrIp: 0.0.0.0/0
+        Tags:
+          - Key: Name
+            Value: elasticsearch-vm-sg
+          - Key: Project
+            Value: TechShop-ElasticSearch
+            
+    # EC2 Instance for ElasticSearch
+    ElasticSearchInstance:
+      Type: AWS::EC2::Instance
+      Properties:
+        ImageId: ami-0c7217cdde317cfec  # Ubuntu 22.04 LTS
+        InstanceType: t3.medium
+        SecurityGroupIds:
+          - !Ref ElasticSearchSecurityGroup
+        KeyName: vockey  # AWS Academy key
+        UserData:
+          Fn::Base64: |
+            #!/bin/bash
+            
+            # Update system
+            apt-get update -y
+            apt-get upgrade -y
+            
+            # Install Docker
+            apt-get install -y ca-certificates curl gnupg lsb-release
+            mkdir -p /etc/apt/keyrings
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+            apt-get update -y
+            apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+            
+            # Start Docker
+            systemctl start docker
+            systemctl enable docker
+            usermod -aG docker ubuntu
+            
+            # Install Docker Compose
+            curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            chmod +x /usr/local/bin/docker-compose
+            
+            # Create directory structure
+            mkdir -p /home/ubuntu/elasticsearch-cluster
+            mkdir -p /home/ubuntu/elasticsearch-cluster/data/empresa_postman
+            mkdir -p /home/ubuntu/elasticsearch-cluster/data/utec
+            mkdir -p /home/ubuntu/elasticsearch-cluster/data/default
+            
+            # Set permissions
+            chown -R ubuntu:ubuntu /home/ubuntu/elasticsearch-cluster
+            chmod -R 775 /home/ubuntu/elasticsearch-cluster
+            
+            # Set vm.max_map_count for ElasticSearch
+            sysctl -w vm.max_map_count=262144
+            echo 'vm.max_map_count=262144' >> /etc/sysctl.conf
+            
+            # Create Docker Compose file
+            cat > /home/ubuntu/elasticsearch-cluster/docker-compose.yml << 'DOCKEREOF'
+            version: '3.8'
+            
+            services:
+              elasticsearch-empresa-postman:
+                image: elasticsearch:8.14.0
+                container_name: es-empresa-postman
+                environment:
+                  - node.name=es-empresa-postman
+                  - cluster.name=techshop-empresa-postman
+                  - discovery.type=single-node
+                  - bootstrap.memory_lock=true
+                  - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+                  - xpack.security.enabled=false
+                  - xpack.security.enrollment.enabled=false
+                  - xpack.security.http.ssl.enabled=false
+                  - xpack.security.transport.ssl.enabled=false
+                ulimits:
+                  memlock:
+                    soft: -1
+                    hard: -1
+                volumes:
+                  - ./data/empresa_postman:/usr/share/elasticsearch/data
+                ports:
+                  - "9200:9200"
+                networks:
+                  - techshop-network
+                restart: unless-stopped
+                  
+              elasticsearch-utec:
+                image: elasticsearch:8.14.0
+                container_name: es-utec
+                environment:
+                  - node.name=es-utec
+                  - cluster.name=techshop-utec
+                  - discovery.type=single-node
+                  - bootstrap.memory_lock=true
+                  - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+                  - xpack.security.enabled=false
+                  - xpack.security.enrollment.enabled=false
+                  - xpack.security.http.ssl.enabled=false
+                  - xpack.security.transport.ssl.enabled=false
+                ulimits:
+                  memlock:
+                    soft: -1
+                    hard: -1
+                volumes:
+                  - ./data/utec:/usr/share/elasticsearch/data
+                ports:
+                  - "9201:9200"
+                networks:
+                  - techshop-network
+                restart: unless-stopped
+                  
+              elasticsearch-default:
+                image: elasticsearch:8.14.0
+                container_name: es-default
+                environment:
+                  - node.name=es-default
+                  - cluster.name=techshop-default
+                  - discovery.type=single-node
+                  - bootstrap.memory_lock=true
+                  - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+                  - xpack.security.enabled=false
+                  - xpack.security.enrollment.enabled=false
+                  - xpack.security.http.ssl.enabled=false
+                  - xpack.security.transport.ssl.enabled=false
+                ulimits:
+                  memlock:
+                    soft: -1
+                    hard: -1
+                volumes:
+                  - ./data/default:/usr/share/elasticsearch/data
+                ports:
+                  - "9202:9200"
+                networks:
+                  - techshop-network
+                restart: unless-stopped
+                  
+              kibana-empresa-postman:
+                image: kibana:8.14.0
+                container_name: kibana-empresa-postman
+                environment:
+                  - ELASTICSEARCH_HOSTS=http://elasticsearch-empresa-postman:9200
+                  - SERVER_NAME=kibana-empresa-postman
+                  - SERVER_HOST=0.0.0.0
+                ports:
+                  - "5601:5601"
+                networks:
+                  - techshop-network
+                depends_on:
+                  - elasticsearch-empresa-postman
+                restart: unless-stopped
+                  
+              kibana-utec:
+                image: kibana:8.14.0
+                container_name: kibana-utec
+                environment:
+                  - ELASTICSEARCH_HOSTS=http://elasticsearch-utec:9200
+                  - SERVER_NAME=kibana-utec
+                  - SERVER_HOST=0.0.0.0
+                ports:
+                  - "5602:5601"
+                networks:
+                  - techshop-network
+                depends_on:
+                  - elasticsearch-utec
+                restart: unless-stopped
+                  
+              kibana-default:
+                image: kibana:8.14.0
+                container_name: kibana-default
+                environment:
+                  - ELASTICSEARCH_HOSTS=http://elasticsearch-default:9200
+                  - SERVER_NAME=kibana-default
+                  - SERVER_HOST=0.0.0.0
+                ports:
+                  - "5603:5601"
+                networks:
+                  - techshop-network
+                depends_on:
+                  - elasticsearch-default
+                restart: unless-stopped
+                  
+            networks:
+              techshop-network:
+                driver: bridge
+            DOCKEREOF
+            
+            # Start ElasticSearch cluster
+            cd /home/ubuntu/elasticsearch-cluster
+            docker-compose up -d
+            
+            # Wait and setup indices
+            sleep 60
+            
+            # Create indices
+            curl -X PUT "localhost:9200/productos" -H 'Content-Type: application/json' -d '{
+              "settings": {
+                "number_of_shards": 1,
+                "number_of_replicas": 0
+              },
+              "mappings": {
+                "properties": {
+                  "codigo": { "type": "keyword" },
+                  "nombre": { "type": "text", "analyzer": "spanish" },
+                  "descripcion": { "type": "text", "analyzer": "spanish" },
+                  "precio": { "type": "double" },
+                  "cantidad": { "type": "integer" },
+                  "categoria": { "type": "keyword" },
+                  "tenant_id": { "type": "keyword" },
+                  "user_id": { "type": "keyword" },
+                  "fechaCreacion": { "type": "date" },
+                  "fechaModificacion": { "type": "date" }
+                }
+              }
+            }'
+            
+            curl -X PUT "localhost:9201/productos" -H 'Content-Type: application/json' -d '{
+              "settings": {
+                "number_of_shards": 1,
+                "number_of_replicas": 0
+              },
+              "mappings": {
+                "properties": {
+                  "codigo": { "type": "keyword" },
+                  "nombre": { "type": "text", "analyzer": "spanish" },
+                  "descripcion": { "type": "text", "analyzer": "spanish" },
+                  "precio": { "type": "double" },
+                  "cantidad": { "type": "integer" },
+                  "categoria": { "type": "keyword" },
+                  "tenant_id": { "type": "keyword" },
+                  "user_id": { "type": "keyword" },
+                  "fechaCreacion": { "type": "date" },
+                  "fechaModificacion": { "type": "date" }
+                }
+              }
+            }'
+            
+            curl -X PUT "localhost:9202/productos" -H 'Content-Type: application/json' -d '{
+              "settings": {
+                "number_of_shards": 1,
+                "number_of_replicas": 0
+              },
+              "mappings": {
+                "properties": {
+                  "codigo": { "type": "keyword" },
+                  "nombre": { "type": "text", "analyzer": "spanish" },
+                  "descripcion": { "type": "text", "analyzer": "spanish" },
+                  "precio": { "type": "double" },
+                  "cantidad": { "type": "integer" },
+                  "categoria": { "type": "keyword" },
+                  "tenant_id": { "type": "keyword" },
+                  "user_id": { "type": "keyword" },
+                  "fechaCreacion": { "type": "date" },
+                  "fechaModificacion": { "type": "date" }
+                }
+              }
+            }'
+            
+        Tags:
+          - Key: Name
+            Value: elasticsearch-vm-techshop
+          - Key: Project
+            Value: TechShop-ElasticSearch
+          - Key: Environment
+            Value: dev
+
+  Outputs:
+    ElasticSearchVMIP:
+      Description: "IP pública de la VM ElasticSearch"
+      Value: !GetAtt ElasticSearchInstance.PublicIp
+      Export:
+        Name: "elasticsearch-vm-system-dev-vm-ip"
+        
+    ElasticSearchEndpoints:
+      Description: "Endpoints de ElasticSearch por tenant"
+      Value: "Check CloudFormation outputs after deployment"
+        
+    KibanaEndpoints:
+      Description: "Endpoints de Kibana por tenant"
+      Value: "Check CloudFormation outputs after deployment"
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: false
