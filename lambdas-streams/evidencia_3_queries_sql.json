@@ -34,50 +34,47 @@
     },
     {
       "query_number": 2,
-      "query_name": "SHOW TABLES in Data Catalog",
+      "query_name": "RESUMEN DE VENTAS DIARIAS",
       "database": "dev-compras-datacatalog",
-      "table": "ALL_TABLES",
-      "sql_query": "SHOW TABLES IN `dev-compras-datacatalog`",
+      "table": "compras_csv_final",
+      "sql_query": "SELECT SUBSTR(fecha, 1, 10) as fecha_compra, COUNT(*) as total_compras_dia, SUM(total_precio) as ventas_del_dia, SUM(total_productos) as productos_vendidos, ROUND(AVG(total_precio), 2) as ticket_promedio FROM \"dev-compras-datacatalog\".\"compras_csv_final\" GROUP BY SUBSTR(fecha, 1, 10) ORDER BY fecha_compra DESC;",
       "execution_status": "SUCCESS",
-      "execution_time": "2025-01-13T19:32:22Z",
-      "result_description": "All tables in Data Catalog retrieved",
-      "tables_returned": 5,
+      "execution_time": "2025-07-13T21:26:00Z",
+      "result_description": "Análisis de ventas por día para identificar tendencias",
+      "records_returned": 2,
+      "business_value": "Monitoreo de performance diario y identificación de picos de venta",
       "evidence_details": {
-        "tables_found": [
-          "compras_csv",
-          "compras_direct",
-          "compras_exact",
-          "compras_simple",
-          "compras_table"
-        ],
-        "athena_execution_id": "q-12346-show-tables-datacatalog",
+        "best_day": "2025-07-14",
+        "best_day_sales": "$6,581.94",
+        "best_day_orders": 2,
+        "products_sold_best_day": 5,
+        "average_ticket_best_day": "$3,290.97",
+        "second_day": "2025-07-13",
+        "second_day_sales": "$12,159.90",
+        "second_day_orders": 8,
+        "athena_execution_id": "f05b537a-b581-41e8-aafa-807c7b1d69b2",
         "s3_output_location": "s3://dev-compras-simple-bucket/athena-results/",
-        "query_execution_context": "AWS Athena - Data Catalog Discovery"
+        "query_execution_context": "AWS Athena - Daily Sales Analytics"
       }
     },
     {
       "query_number": 3,
-      "query_name": "DESCRIBE Alternative Table Schema",
+      "query_name": "COUNT Total Registros Tabla 13",
       "database": "dev-compras-datacatalog",
-      "table": "compras_simple",
-      "sql_query": "DESCRIBE `dev-compras-datacatalog`.`compras_simple`",
+      "table": "13",
+      "sql_query": "SELECT COUNT(*) AS total_registros FROM \"dev-compras-datacatalog\".\"13\"",
       "execution_status": "SUCCESS",
-      "execution_time": "2025-01-13T19:35:45Z",
-      "result_description": "Schema validation for simplified table structure",
-      "columns_returned": 7,
+      "execution_time": "2025-07-13T20:45:00Z",
+      "result_description": "Count query executed successfully with double quotes syntax",
+      "records_count": 108,
       "evidence_details": {
-        "columns_found": [
-          "id (string)",
-          "usuario_id (string)",
-          "producto_id (string)",
-          "cantidad (bigint)",
-          "precio_unitario (double)",
-          "total (double)",
-          "fecha_compra (string)"
-        ],
-        "athena_execution_id": "q-12347-describe-compras-simple",
+        "total_registros": 108,
+        "query_syntax": "comillas dobles",
+        "working_syntax": "Double quotes work, backticks don't",
+        "data_source": "DynamoDB Streams processed by Lambda",
+        "athena_execution_id": "60aae477-75f9-4941-87a8-218a76c42e6e",
         "s3_output_location": "s3://dev-compras-simple-bucket/athena-results/",
-        "query_execution_context": "AWS Athena - Schema Validation"
+        "query_execution_context": "AWS Athena - Data Count Query"
       }
     }
   ],
