@@ -304,6 +304,36 @@ const Icons = {
       />
     </svg>
   ),
+  Filter: () => (
+    <svg
+      className="w-5 h-5"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"
+      />
+    </svg>
+  ),
+  DollarSign: () => (
+    <svg
+      className="w-5 h-5"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
+    </svg>
+  ),
 };
 
 // Modern Loading Component
@@ -451,7 +481,7 @@ const CreateProductView: React.FC<{
           Back to Products
         </button>
         <h1 className="text-3xl font-bold text-white mb-2">Create New Product</h1>
-        <p className="text-slate-400">Add a new product to your inventory</p>
+        <p className="text-slate-400">Add a new product to the shop</p>
       </div>
 
       {/* Form */}
@@ -563,12 +593,108 @@ const CategoryBar: React.FC<{
   categories: string[];
   selectedCategory: string;
   onCategoryChange: (category: string) => void;
-}> = ({ categories, selectedCategory, onCategoryChange }) => (
+  showPriceFilter: boolean;
+  setShowPriceFilter: (show: boolean) => void;
+  minPrice: string;
+  setMinPrice: (price: string) => void;
+  maxPrice: string;
+  setMaxPrice: (price: string) => void;
+  onPriceFilterApply: () => void;
+  onPriceFilterClear: () => void;
+  priceFilterActive: boolean;
+}> = ({ 
+  categories, 
+  selectedCategory, 
+  onCategoryChange, 
+  showPriceFilter, 
+  setShowPriceFilter, 
+  minPrice, 
+  setMinPrice, 
+  maxPrice, 
+  setMaxPrice, 
+  onPriceFilterApply, 
+  onPriceFilterClear, 
+  priceFilterActive 
+}) => (
   <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-4 border border-white/10 shadow-lg mb-6">
-    <div className="flex items-center gap-2 mb-4">
-      <Icons.Package />
-      <h3 className="text-lg font-semibold text-white">Product Categories</h3>
+    <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center gap-2">
+        <Icons.Package />
+        <h3 className="text-lg font-semibold text-white">Product Categories</h3>
+      </div>
+      
+      <div className="flex items-center gap-2">
+        {priceFilterActive && (
+          <span className="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded-full">
+            Price Filter Active
+          </span>
+        )}
+        <button
+          onClick={() => setShowPriceFilter(!showPriceFilter)}
+          className={`p-2 rounded-xl font-medium text-sm transition-all duration-200 flex items-center gap-2 ${
+            showPriceFilter || priceFilterActive
+              ? "bg-gradient-to-r from-emerald-600 to-blue-600 text-white shadow-lg"
+              : "bg-white/10 text-slate-300 hover:bg-white/20 hover:text-white"
+          }`}
+          title="Filter by Price"
+        >
+          <Icons.DollarSign />
+          <Icons.Filter />
+        </button>
+      </div>
     </div>
+
+    {showPriceFilter && (
+      <div className="mb-4 p-4 bg-white/5 rounded-xl border border-white/10">
+        <div className="flex items-center gap-2 mb-3">
+          <Icons.DollarSign />
+          <h4 className="text-white font-medium">Price Range Filter</h4>
+        </div>
+        
+        <div className="flex gap-3 items-center">
+          <div className="flex-1">
+            <label className="block text-xs text-slate-400 mb-1">Min Price</label>
+            <input
+              type="number"
+              placeholder="0"
+              value={minPrice}
+              onChange={(e) => setMinPrice(e.target.value)}
+              className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            />
+          </div>
+          
+          <div className="flex items-center text-slate-400 mt-5">
+            <span className="text-sm">to</span>
+          </div>
+          
+          <div className="flex-1">
+            <label className="block text-xs text-slate-400 mb-1">Max Price</label>
+            <input
+              type="number"
+              placeholder="∞"
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(e.target.value)}
+              className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            />
+          </div>
+        </div>
+        
+        <div className="flex gap-2 mt-3">
+          <button
+            onClick={onPriceFilterApply}
+            className="flex-1 bg-gradient-to-r from-emerald-600 to-blue-600 text-white py-2 px-4 rounded-lg text-sm hover:from-emerald-700 hover:to-blue-700 transition-all duration-200 font-medium"
+          >
+            Apply Filter
+          </button>
+          <button
+            onClick={onPriceFilterClear}
+            className="flex-1 bg-slate-500/20 text-slate-400 py-2 px-4 rounded-lg text-sm hover:bg-slate-500/30 transition-all duration-200 font-medium"
+          >
+            Clear Filter
+          </button>
+        </div>
+      </div>
+    )}
     
     <div className="flex flex-wrap gap-2 overflow-x-auto pb-2">
       <button
@@ -1225,6 +1351,12 @@ function App() {
   const [categoryHasMore, setCategoryHasMore] = useState(true);
   const [categoryLoadingMore, setCategoryLoadingMore] = useState(false);
 
+  // Price filter states
+  const [showPriceFilter, setShowPriceFilter] = useState(false);
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [priceFilterActive, setPriceFilterActive] = useState(false);
+
   // Constants
   const PAGE_SIZE = 12;
 
@@ -1621,10 +1753,17 @@ function App() {
         const data = await res.json();
 
         if (data.productos) {
+          let productsToShow = data.productos;
+          
+          // Apply price filter if active
+          if (priceFilterActive) {
+            productsToShow = applyPriceFilter(productsToShow);
+          }
+          
           if (append) {
-            setCategoryProducts((prev) => [...prev, ...data.productos]);
+            setCategoryProducts((prev) => [...prev, ...productsToShow]);
           } else {
-            setCategoryProducts(data.productos);
+            setCategoryProducts(productsToShow);
           }
 
           const hasMoreProducts = data.pagination?.hasMore || false;
@@ -1661,9 +1800,16 @@ function App() {
         }
 
         // Aplicar paginación manual
+        let finalProducts = allCategoryProducts;
+        
+        // Apply price filter if active
+        if (priceFilterActive) {
+          finalProducts = applyPriceFilter(finalProducts);
+        }
+        
         const startIndex = append ? categoryProducts.length : offset;
         const endIndex = startIndex + PAGE_SIZE;
-        const paginatedProducts = allCategoryProducts.slice(startIndex, endIndex);
+        const paginatedProducts = finalProducts.slice(startIndex, endIndex);
 
         if (append) {
           setCategoryProducts((prev) => [...prev, ...paginatedProducts]);
@@ -1671,7 +1817,7 @@ function App() {
           setCategoryProducts(paginatedProducts);
         }
 
-        setCategoryHasMore(endIndex < allCategoryProducts.length);
+        setCategoryHasMore(endIndex < finalProducts.length);
         setCategoryOffset(endIndex);
       }
     } catch (error) {
@@ -1700,7 +1846,14 @@ function App() {
   // Nueva función para buscar productos en la base de datos
   const searchProductsInDatabase = async (searchTerm: string) => {
     if (!searchTerm || searchTerm.length < 2) {
-      setFilteredProducts(productos);
+      let productsToShow = productos;
+      
+      // Apply price filter if active
+      if (priceFilterActive) {
+        productsToShow = applyPriceFilter(productsToShow);
+      }
+      
+      setFilteredProducts(productsToShow);
       setSearchLoading(false);
       return;
     }
@@ -1732,13 +1885,25 @@ function App() {
       }
 
       // Aplicar búsqueda fuzzy local a todos los productos obtenidos
-      const searchResults = applyFuzzySearch(searchTerm, allProducts);
+      let searchResults = applyFuzzySearch(searchTerm, allProducts);
+      
+      // Apply price filter if active
+      if (priceFilterActive) {
+        searchResults = applyPriceFilter(searchResults);
+      }
+      
       setFilteredProducts(searchResults);
       
     } catch (error) {
       console.error("Error searching products:", error);
       // Fallback a búsqueda local si falla la búsqueda en BD
-      const localResults = applyFuzzySearch(searchTerm, productos);
+      let localResults = applyFuzzySearch(searchTerm, productos);
+      
+      // Apply price filter if active
+      if (priceFilterActive) {
+        localResults = applyPriceFilter(localResults);
+      }
+      
       setFilteredProducts(localResults);
     } finally {
       setSearchLoading(false);
@@ -2260,6 +2425,35 @@ function App() {
     }
   }, [isAuthenticated, loadCompras]);
 
+  // Price filter functions
+  const applyPriceFilter = (productList: Product[]) => {
+    if (!priceFilterActive) return productList;
+
+    const min = parseFloat(minPrice) || 0;
+    const max = parseFloat(maxPrice) || Infinity;
+
+    return productList.filter(product => {
+      const price = parseFloat(product.precio.toString());
+      return price >= min && price <= max;
+    });
+  };
+
+  const handlePriceFilterApply = () => {
+    setPriceFilterActive(true);
+    setShowPriceFilter(false);
+    // Recargar productos con filtro de precio
+    loadProductsByCategory(selectedCategory, 0, false);
+  };
+
+  const handlePriceFilterClear = () => {
+    setMinPrice("");
+    setMaxPrice("");
+    setPriceFilterActive(false);
+    setShowPriceFilter(false);
+    // Recargar productos sin filtro de precio
+    loadProductsByCategory(selectedCategory, 0, false);
+  };
+
   // Main render
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950">
@@ -2350,6 +2544,15 @@ function App() {
                     categories={categories}
                     selectedCategory={selectedCategory}
                     onCategoryChange={handleCategoryChange}
+                    showPriceFilter={showPriceFilter}
+                    setShowPriceFilter={setShowPriceFilter}
+                    minPrice={minPrice}
+                    setMinPrice={setMinPrice}
+                    maxPrice={maxPrice}
+                    setMaxPrice={setMaxPrice}
+                    onPriceFilterApply={handlePriceFilterApply}
+                    onPriceFilterClear={handlePriceFilterClear}
+                    priceFilterActive={priceFilterActive}
                   />
 
                   <CategoryProductsSection
