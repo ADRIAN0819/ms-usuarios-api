@@ -52,6 +52,25 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* Scrolling banner animation */
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scroll {
+  animation: scroll 30s linear infinite;
+}
+
+/* Pause animation on hover */
+.animate-scroll:hover {
+  animation-play-state: paused;
+}
+
 /* Enhanced animations for 2025 */
 .fade-in {
   animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
