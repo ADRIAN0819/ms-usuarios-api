@@ -380,45 +380,6 @@ const DashboardHeader: React.FC<{
   </header>
 );
 
-// Modern Scrolling Banner Component
-const ScrollingBanner: React.FC = () => {
-  const messages = [
-    "🚀 Multi-tenant E-commerce Platform",
-    "⚡ Real-time Product Search",
-    "🔒 Secure Authentication System",
-    "📱 Modern Responsive Design",
-    "💳 Instant Cart Management",
-    "🎯 Smart Product Filtering",
-    "🌟 TechStore - Your Digital Marketplace",
-    "🔍 Advanced Search with Fuzzy Matching",
-    "💼 Professional Multi-tenant Architecture",
-    "🛒 Seamless Shopping Experience",
-    "📊 Dynamic Price Filtering",
-    "🎨 Beautiful Modern UI/UX",
-    "⚙️ Efficient Product Management",
-    "🔐 JWT Token Security",
-    "🌐 Cloud-based Infrastructure",
-    "💡 Innovation in E-commerce",
-  ];
-
-  return (
-    <div className="bg-gradient-to-r from-blue-600/20 via-violet-600/20 to-emerald-600/20 backdrop-blur-xl border-b border-white/10 overflow-hidden">
-      <div className="relative h-10 flex items-center">
-        <div className="animate-scroll flex items-center space-x-8 whitespace-nowrap">
-          {/* Render messages twice for seamless loop */}
-          {[...messages, ...messages].map((message, index) => (
-            <span
-              key={index}
-              className="text-white/80 text-sm font-medium px-4 py-2 bg-white/5 rounded-full border border-white/10 backdrop-blur-sm"
-            >
-              {message}
-            </span>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // Modern Best Sellers Carousel Component
 const BestSellersCarousel: React.FC<{
@@ -2884,7 +2845,6 @@ function App() {
       {currentView === "dashboard" && (
         <div className="min-h-screen">
           <DashboardHeader userInfo={userInfo} handleLogout={handleLogout} />
-          <ScrollingBanner />
           <NavigationTabs 
             activeTab={activeTab} 
             setActiveTab={setActiveTab} 
