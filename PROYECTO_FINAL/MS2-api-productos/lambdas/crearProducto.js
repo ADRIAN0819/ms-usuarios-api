@@ -56,7 +56,7 @@ export const crearProducto = async (event) => {
       };
     }
 
-    const { codigo, nombre, descripcion, precio, cantidad } = JSON.parse(
+    const { codigo, nombre, descripcion, precio, cantidad, categoria } = JSON.parse(
       event.body
     );
 
@@ -81,7 +81,7 @@ export const crearProducto = async (event) => {
       tenant_id: tokenData.tenant_id, // Usar tenant del token
       user_id: tokenData.user_id, // Asociar al usuario autenticado
       fechaCreacion: new Date().toISOString(),
-      categoria: "Electrónicos", // Categoría del Grupo 3
+      categoria: categoria || "General", // Usar categoría del usuario o "General" por defecto
     };
 
     // Usar AWS SDK v3 command pattern

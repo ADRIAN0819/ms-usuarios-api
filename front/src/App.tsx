@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+﻿import React, { useState, useEffect, useCallback } from "react";
 import LandingPage from "./LandingPage";
 import LoginScreen from "./components/LoginScreen";
 import RegisterScreen from "./components/RegisterScreen";
-import ProductList from "./components/ProductList";
 import Notification from "./components/Notification";
+import ManageProducts from "./components/ManageProducts";
 import type {
   Product,
   CartItem,
@@ -283,6 +283,27 @@ const Icons = {
       />
     </svg>
   ),
+  Settings: () => (
+    <svg
+      className="w-5 h-5"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+      />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+      />
+    </svg>
+  ),
 };
 
 // Modern Loading Component
@@ -312,7 +333,9 @@ const DashboardHeader: React.FC<{
 
         <div className="flex items-center space-x-4">
           <div className="text-right">
-            <p className="text-sm font-medium text-white">{userInfo.user_id}</p>
+            <p className="text-sm font-medium text-white">
+              {userInfo.name || userInfo.user_id}
+            </p>
             <p className="text-xs text-slate-400">{userInfo.tenant_id}</p>
           </div>
           <button
@@ -331,35 +354,256 @@ const DashboardHeader: React.FC<{
 const NavigationTabs: React.FC<{
   activeTab: string;
   setActiveTab: (tab: string) => void;
-}> = ({ activeTab, setActiveTab }) => (
+  onCreateProduct: () => void;
+  showCreateProductView: boolean;
+  setShowCreateProductView: (show: boolean) => void;
+  showManageProducts: boolean;
+  setShowManageProducts: (show: boolean) => void;
+}> = ({ activeTab, setActiveTab, onCreateProduct, showCreateProductView, setShowCreateProductView, showManageProducts, setShowManageProducts }) => (
   <nav className="bg-white/5 backdrop-blur-xl border-b border-white/10">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="flex space-x-8">
-        <button
-          className={`py-4 px-6 border-b-2 font-medium text-sm transition-all duration-200 flex items-center gap-2 ${
-            activeTab === "productos"
-              ? "border-blue-500 text-blue-400"
-              : "border-transparent text-slate-400 hover:text-white hover:border-slate-300"
-          }`}
-          onClick={() => setActiveTab("productos")}
-        >
-          <Icons.Package />
-          Products
-        </button>
-        <button
-          className={`py-4 px-6 border-b-2 font-medium text-sm transition-all duration-200 flex items-center gap-2 ${
-            activeTab === "compras"
-              ? "border-blue-500 text-blue-400"
-              : "border-transparent text-slate-400 hover:text-white hover:border-slate-300"
-          }`}
-          onClick={() => setActiveTab("compras")}
-        >
-          <Icons.ShoppingCart />
-          Shopping
-        </button>
+      <div className="flex items-center justify-center">
+        <div className="flex items-center space-x-4">
+          <button
+            className={`py-4 px-6 border-b-2 font-medium text-sm transition-all duration-200 flex items-center gap-2 ${
+              activeTab === "productos" && !showCreateProductView && !showManageProducts
+                ? "border-blue-500 text-blue-400"
+                : "border-transparent text-slate-400 hover:text-white hover:border-slate-300"
+            }`}
+            onClick={() => {
+              setActiveTab("productos");
+              setShowCreateProductView(false);
+              setShowManageProducts(false);
+            }}
+          >
+            <Icons.Package />
+            Products
+          </button>
+          
+          <button
+            onClick={onCreateProduct}
+            className={`py-4 px-6 border-b-2 font-medium text-sm transition-all duration-200 flex items-center gap-2 ${
+              showCreateProductView
+                ? "border-emerald-500 text-emerald-400"
+                : "border-transparent text-slate-400 hover:text-white hover:border-slate-300"
+            }`}
+          >
+            <Icons.Plus />
+            Create New Product
+          </button>
+          
+          <button
+            onClick={() => {
+              setShowManageProducts(true);
+              setShowCreateProductView(false);
+              setActiveTab("manage");
+            }}
+            className={`py-4 px-6 border-b-2 font-medium text-sm transition-all duration-200 flex items-center gap-2 ${
+              showManageProducts
+                ? "border-violet-500 text-violet-400"
+                : "border-transparent text-slate-400 hover:text-white hover:border-slate-300"
+            }`}
+          >
+            <Icons.Settings />
+            Manage Your Products
+          </button>
+          
+          <button
+            className={`py-4 px-6 border-b-2 font-medium text-sm transition-all duration-200 flex items-center gap-2 ${
+              activeTab === "compras" && !showCreateProductView && !showManageProducts
+                ? "border-blue-500 text-blue-400"
+                : "border-transparent text-slate-400 hover:text-white hover:border-slate-300"
+            }`}
+            onClick={() => {
+              setActiveTab("compras");
+              setShowCreateProductView(false);
+              setShowManageProducts(false);
+            }}
+          >
+            <Icons.ShoppingCart />
+            Shopping
+          </button>
+        </div>
       </div>
     </div>
   </nav>
+);
+
+// Create Product View Component
+const CreateProductView: React.FC<{
+  productForm: ProductForm;
+  setProductForm: (form: ProductForm) => void;
+  createProduct: () => void;
+  loading: boolean;
+  onBack: () => void;
+}> = ({ productForm, setProductForm, createProduct, loading, onBack }) => (
+  <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 p-8">
+    <div className="max-w-4xl mx-auto">
+      {/* Header */}
+      <div className="mb-8">
+        <button
+          onClick={onBack}
+          className="mb-4 flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Products
+        </button>
+        <h1 className="text-3xl font-bold text-white mb-2">Create New Product</h1>
+        <p className="text-slate-400">Add a new product to your inventory</p>
+      </div>
+
+      {/* Form */}
+      <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-8 border border-white/10 shadow-lg">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div>
+            <label className="block text-sm font-medium text-white mb-2">Product Code *</label>
+            <input
+              placeholder="Enter product code"
+              value={productForm.codigo}
+              onChange={(e) =>
+                setProductForm({ ...productForm, codigo: e.target.value })
+              }
+              className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all backdrop-blur-sm"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-white mb-2">Product Name *</label>
+            <input
+              placeholder="Enter product name"
+              value={productForm.nombre}
+              onChange={(e) =>
+                setProductForm({ ...productForm, nombre: e.target.value })
+              }
+              className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all backdrop-blur-sm"
+            />
+          </div>
+          
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-white mb-2">Description</label>
+            <textarea
+              placeholder="Enter product description"
+              value={productForm.descripcion}
+              onChange={(e) =>
+                setProductForm({ ...productForm, descripcion: e.target.value })
+              }
+              rows={3}
+              className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all backdrop-blur-sm resize-none"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-white mb-2">Price *</label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400">$</span>
+              <input
+                type="number"
+                placeholder="0.00"
+                value={productForm.precio}
+                onChange={(e) =>
+                  setProductForm({ ...productForm, precio: e.target.value })
+                }
+                className="w-full pl-8 pr-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all backdrop-blur-sm"
+              />
+            </div>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-white mb-2">Quantity *</label>
+            <input
+              type="number"
+              placeholder="Enter quantity"
+              value={productForm.cantidad}
+              onChange={(e) =>
+                setProductForm({ ...productForm, cantidad: e.target.value })
+              }
+              className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all backdrop-blur-sm"
+            />
+          </div>
+          
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-white mb-2">Category</label>
+            <input
+              placeholder="Enter product category"
+              value={productForm.categoria}
+              onChange={(e) =>
+                setProductForm({ ...productForm, categoria: e.target.value })
+              }
+              className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all backdrop-blur-sm"
+            />
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-4 justify-end">
+          <button
+            onClick={onBack}
+            className="px-6 py-3 bg-slate-500/20 text-slate-400 rounded-xl font-medium hover:bg-slate-500/30 transition-all duration-200"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={createProduct}
+            disabled={loading}
+            className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-blue-600 text-white rounded-xl font-medium hover:from-emerald-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 shadow-lg"
+          >
+            {loading ? <LoadingSpinner /> : <Icons.Plus />}
+            {loading ? "Creating Product..." : "Create Product"}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// Modern Category Bar
+const CategoryBar: React.FC<{
+  categories: string[];
+  selectedCategory: string;
+  onCategoryChange: (category: string) => void;
+}> = ({ categories, selectedCategory, onCategoryChange }) => (
+  <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-4 border border-white/10 shadow-lg mb-6">
+    <div className="flex items-center gap-2 mb-4">
+      <Icons.Package />
+      <h3 className="text-lg font-semibold text-white">Product Categories</h3>
+    </div>
+    
+    <div className="flex flex-wrap gap-2 overflow-x-auto pb-2">
+      <button
+        onClick={() => onCategoryChange("all")}
+        className={`px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 whitespace-nowrap flex items-center gap-2 ${
+          selectedCategory === "all"
+            ? "bg-gradient-to-r from-blue-600 to-violet-600 text-white shadow-lg"
+            : "bg-white/10 text-slate-300 hover:bg-white/20 hover:text-white"
+        }`}
+      >
+        <Icons.Package />
+        All Products
+      </button>
+      
+      {categories.map((category) => (
+        <button
+          key={category}
+          onClick={() => onCategoryChange(category)}
+          className={`px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 whitespace-nowrap ${
+            selectedCategory === category
+              ? "bg-gradient-to-r from-emerald-600 to-blue-600 text-white shadow-lg"
+              : "bg-white/10 text-slate-300 hover:bg-white/20 hover:text-white"
+          }`}
+        >
+          {category}
+        </button>
+      ))}
+    </div>
+    
+    {categories.length === 0 && (
+      <div className="text-center py-4">
+        <p className="text-slate-400 text-sm">No categories available</p>
+      </div>
+    )}
+  </div>
 );
 
 // Modern Search Section
@@ -369,101 +613,294 @@ const SearchSection: React.FC<{
   filteredProducts: Product[];
   setSelectedProduct: (product: Product | null) => void;
   addToCart: (product: Product, quantity?: number) => void;
-  onEditProduct: (product: Product) => void;
-  onDeleteProduct: (product: Product) => void;
+  searchLoading: boolean;
+  handleSearchChange: (term: string) => void;
 }> = ({
   searchTerm,
   setSearchTerm,
   filteredProducts,
   setSelectedProduct,
   addToCart,
-  onEditProduct,
-  onDeleteProduct,
+  searchLoading,
+  handleSearchChange,
 }) => (
   <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-lg">
     <div className="mb-6">
       <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
         <Icons.Search />
         Smart Product Search
+        <span className="text-sm font-normal text-slate-400">
+          (Fuzzy matching & Real-time search)
+        </span>
       </h3>
       <div className="relative">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-          <Icons.Search />
+        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400">
+          {searchLoading ? (
+            <div className="animate-spin rounded-full h-5 w-5 border-2 border-slate-400 border-t-transparent"></div>
+          ) : (
+            <Icons.Search />
+          )}
         </div>
         <input
           type="text"
-          placeholder="Search products with fuzzy matching..."
+          placeholder="Search products..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => handleSearchChange(e.target.value)}
           className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all backdrop-blur-sm"
         />
+        {searchTerm && (
+          <button
+            onClick={() => {
+              setSearchTerm("");
+              handleSearchChange("");
+            }}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+          >
+            <Icons.X />
+          </button>
+        )}
       </div>
     </div>
 
     {searchTerm && (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h4 className="text-white font-medium">Search Results</h4>
-          <span className="bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full text-sm font-medium">
-            {filteredProducts.length} found
+          <span className="text-sm text-slate-400">
+            {searchLoading ? (
+              <span className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-slate-400 border-t-transparent"></div>
+                Searching database...
+              </span>
+            ) : (
+              `Found ${filteredProducts.length} products`
+            )}
           </span>
+          {filteredProducts.length > 0 && !searchLoading && (
+            <span className="text-xs text-emerald-400">
+              Real-time search active
+            </span>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredProducts.map((product: Product) => (
+        {!searchLoading && filteredProducts.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+            {filteredProducts.map((product: Product) => (
+              <div
+                key={product.codigo}
+                className="bg-white/5 rounded-xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-200 backdrop-blur-sm group flex flex-col h-full"
+              >
+                <div className="flex-1">
+                  <h5 className="text-white font-medium mb-2 group-hover:text-blue-400 transition-colors">
+                    {product.nombre}
+                  </h5>
+                  <div className="space-y-1 text-sm mb-4">
+                    <p className="text-slate-400">
+                      Code: <span className="text-slate-300">{product.codigo}</span>
+                    </p>
+                    <p className="text-emerald-400 font-semibold">
+                      ${product.precio}
+                    </p>
+                    <p className="text-slate-400">
+                      Stock:{" "}
+                      <span
+                        className={
+                          product.cantidad > 0 ? "text-emerald-400" : "text-red-400"
+                        }
+                      >
+                        {product.cantidad}
+                      </span>
+                    </p>
+                    <p className="text-blue-400">{product.categoria}</p>
+                  </div>
+                  <p className="text-slate-300 text-sm line-clamp-3 mb-4">
+                    {product.descripcion}
+                  </p>
+                </div>
+
+                <div className="flex gap-2 mt-auto">
+                  <button
+                    onClick={() => {
+                      setSelectedProduct(product);
+                      // Add view animation
+                      const button = document.activeElement as HTMLButtonElement;
+                      if (button) {
+                        button.classList.add('view-animation');
+                        setTimeout(() => {
+                          button.classList.remove('view-animation');
+                        }, 600);
+                      }
+                    }}
+                    className="flex-1 bg-blue-500/20 text-blue-400 py-2 px-3 rounded-lg text-sm hover:bg-blue-500/30 transition-all duration-200 flex items-center justify-center gap-1 font-medium transform hover:scale-105 active:scale-95 btn-animate"
+                  >
+                    <Icons.Eye />
+                    View
+                  </button>
+                  <button
+                    onClick={() => {
+                      addToCart(product);
+                      // Add cart animation
+                      const button = document.activeElement as HTMLButtonElement;
+                      if (button) {
+                        button.classList.add('cart-add-animation');
+                        setTimeout(() => {
+                          button.classList.remove('cart-add-animation');
+                        }, 500);
+                      }
+                    }}
+                    disabled={product.cantidad <= 0}
+                    className="flex-1 bg-emerald-500/20 text-emerald-400 py-2 px-3 rounded-lg text-sm hover:bg-emerald-500/30 transition-all duration-200 flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed font-medium transform hover:scale-105 active:scale-95 btn-animate"
+                  >
+                    <Icons.ShoppingCart />
+                    Add
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!searchLoading && filteredProducts.length === 0 && (
+          <div className="text-center py-8">
+            <div className="text-slate-400 mb-2">No products found</div>
+            <div className="text-sm text-slate-500">
+              Try a different search term or check your spelling
+            </div>
+          </div>
+        )}
+      </div>
+    )}
+  </div>
+);
+
+// Modern Category Products Section
+const CategoryProductsSection: React.FC<{
+  selectedCategory: string;
+  categoryProducts: Product[];
+  categoryHasMore: boolean;
+  categoryLoadingMore: boolean;
+  loadMoreCategoryProducts: () => void;
+  addToCart: (product: Product, quantity?: number) => void;
+  onEditProduct: (product: Product) => void;
+  onDeleteProduct: (product: Product) => void;
+  setSelectedProduct: (product: Product | null) => void;
+}> = ({
+  selectedCategory,
+  categoryProducts,
+  categoryHasMore,
+  categoryLoadingMore,
+  loadMoreCategoryProducts,
+  addToCart,
+  onEditProduct,
+  onDeleteProduct,
+  setSelectedProduct,
+}) => (
+  <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-lg">
+    <div className="flex items-center justify-between mb-6">
+      <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+        <Icons.Package />
+        {selectedCategory === "all" ? "All Products" : `${selectedCategory} Products`}
+      </h3>
+      <span className="bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full text-sm font-medium">
+        {categoryProducts.length} loaded
+      </span>
+    </div>
+
+    {categoryProducts.length === 0 ? (
+      <div className="text-center py-12">
+        <Icons.Package />
+        <p className="text-slate-400 mt-4">No products found in this category</p>
+        <p className="text-sm text-slate-500 mt-2">
+          Try selecting a different category or create new products
+        </p>
+      </div>
+    ) : (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {categoryProducts.map((product: Product) => (
             <div
               key={product.codigo}
-              className="bg-white/5 rounded-xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-200 backdrop-blur-sm group"
+              className="bg-white/5 rounded-xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-200 backdrop-blur-sm group flex flex-col h-full"
             >
-              <h5 className="text-white font-medium mb-2 group-hover:text-blue-400 transition-colors">
-                {product.nombre}
-              </h5>
-              <div className="space-y-1 text-sm mb-4">
-                <p className="text-slate-400">
-                  Code: <span className="text-slate-300">{product.codigo}</span>
-                </p>
-                <p className="text-emerald-400 font-semibold">
-                  ${product.precio}
-                </p>
-                <p className="text-slate-400">
-                  Stock:{" "}
-                  <span
-                    className={
-                      product.cantidad > 0 ? "text-emerald-400" : "text-red-400"
-                    }
-                  >
-                    {product.cantidad}
-                  </span>
-                </p>
-                <p className="text-blue-400">{product.categoria}</p>
+              <div className="flex-1">
+                <div className="flex justify-between items-start mb-3">
+                  <h4 className="text-white font-medium truncate group-hover:text-blue-400 transition-colors">
+                    {product.nombre}
+                  </h4>
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => onEditProduct(product)}
+                      className="p-1 text-slate-400 hover:text-blue-400 transition-colors"
+                    >
+                      <Icons.Edit />
+                    </button>
+                    <button
+                      onClick={() => onDeleteProduct(product)}
+                      className="p-1 text-slate-400 hover:text-red-400 transition-colors"
+                    >
+                      <Icons.Trash />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2 text-sm mb-4">
+                  <p className="text-slate-400 line-clamp-2">
+                    {product.descripcion}
+                  </p>
+                  <div className="flex justify-between items-center">
+                    <span className="text-emerald-400 font-semibold">
+                      ${product.precio}
+                    </span>
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      product.cantidad > 0 
+                        ? "bg-emerald-500/20 text-emerald-400" 
+                        : "bg-red-500/20 text-red-400"
+                    }`}>
+                      Stock: {product.cantidad}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500 text-xs">
+                      Code: {product.codigo}
+                    </span>
+                    <span className="text-blue-400 text-xs bg-blue-500/20 px-2 py-1 rounded-full">
+                      {product.categoria}
+                    </span>
+                  </div>
+                </div>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-auto">
                 <button
-                  onClick={() => setSelectedProduct(product)}
-                  className="flex-1 bg-blue-500/20 text-blue-400 py-2 px-3 rounded-lg text-sm hover:bg-blue-500/30 transition-all duration-200 flex items-center justify-center gap-1 font-medium"
+                  onClick={() => {
+                    setSelectedProduct(product);
+                    // Add view animation
+                    const button = document.activeElement as HTMLButtonElement;
+                    if (button) {
+                      button.classList.add('view-animation');
+                      setTimeout(() => {
+                        button.classList.remove('view-animation');
+                      }, 600);
+                    }
+                  }}
+                  className="flex-1 bg-blue-500/20 text-blue-400 py-2 px-3 rounded-lg text-sm hover:bg-blue-500/30 transition-all duration-200 flex items-center justify-center gap-1 font-medium transform hover:scale-105 active:scale-95 btn-animate"
                 >
                   <Icons.Eye />
                   View
                 </button>
                 <button
-                  onClick={() => onEditProduct(product)}
-                  className="flex-1 bg-yellow-500/20 text-yellow-400 py-2 px-3 rounded-lg text-sm hover:bg-yellow-500/30 transition-all duration-200 flex items-center justify-center gap-1 font-medium"
-                >
-                  <Icons.Edit />
-                  Edit
-                </button>
-                <button
-                  onClick={() => onDeleteProduct(product)}
-                  className="flex-1 bg-red-500/20 text-red-400 py-2 px-3 rounded-lg text-sm hover:bg-red-500/30 transition-all duration-200 flex items-center justify-center gap-1 font-medium"
-                >
-                  <Icons.Trash />
-                  Delete
-                </button>
-                <button
-                  onClick={() => addToCart(product)}
+                  onClick={() => {
+                    addToCart(product);
+                    // Add cart animation
+                    const button = document.activeElement as HTMLButtonElement;
+                    if (button) {
+                      button.classList.add('cart-add-animation');
+                      setTimeout(() => {
+                        button.classList.remove('cart-add-animation');
+                      }, 500);
+                    }
+                  }}
                   disabled={product.cantidad <= 0}
-                  className="flex-1 bg-emerald-500/20 text-emerald-400 py-2 px-3 rounded-lg text-sm hover:bg-emerald-500/30 transition-all duration-200 flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                  className="flex-1 bg-emerald-500/20 text-emerald-400 py-2 px-3 rounded-lg text-sm hover:bg-emerald-500/30 transition-all duration-200 flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed font-medium transform hover:scale-105 active:scale-95 btn-animate"
                 >
                   <Icons.ShoppingCart />
                   Add
@@ -472,11 +909,34 @@ const SearchSection: React.FC<{
             </div>
           ))}
         </div>
+
+        {categoryHasMore && (
+          <div className="text-center">
+            <button
+              onClick={loadMoreCategoryProducts}
+              disabled={categoryLoadingMore}
+              className="bg-gradient-to-r from-blue-600 to-violet-600 text-white py-3 px-6 rounded-xl font-medium hover:from-blue-700 hover:to-violet-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2 mx-auto shadow-lg"
+            >
+              {categoryLoadingMore ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-white/30 border-t-white"></div>
+                  Loading...
+                </>
+              ) : (
+                <>
+                  <Icons.Plus />
+                  Load More Products
+                </>
+              )}
+            </button>
+          </div>
+        )}
       </div>
     )}
   </div>
 );
 
+// Modern Product Form Modal
 // Modern Product Form
 const ProductForm: React.FC<{
   productForm: ProductForm;
@@ -497,7 +957,7 @@ const ProductForm: React.FC<{
         onChange={(e) =>
           setProductForm({ ...productForm, codigo: e.target.value })
         }
-        className="px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all backdrop-blur-sm"
+        className="px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-slate-400 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all backdrop-blur-sm"
       />
       <input
         placeholder="Product Name"
@@ -733,6 +1193,7 @@ function App() {
   const [userInfo, setUserInfo] = useState<UserInfo>({
     user_id: "",
     tenant_id: "",
+    name: "",
   });
 
   // User form states
@@ -756,26 +1217,37 @@ function App() {
     categoria: "",
   });
 
+  // Category states
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [categoryProducts, setCategoryProducts] = useState<Product[]>([]);
+  const [categoryOffset, setCategoryOffset] = useState(0);
+  const [categoryHasMore, setCategoryHasMore] = useState(true);
+  const [categoryLoadingMore, setCategoryLoadingMore] = useState(false);
+
+  // Constants
+  const PAGE_SIZE = 12;
+
   // Product editing states
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
-  // Pagination states
-  const [currentOffset, setCurrentOffset] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const PAGE_SIZE = 12;
-
   // Shopping cart states
   const [cart, setCart] = useState<CartItem[]>([]);
   const [compras, setCompras] = useState<Compra[]>([]);
+
+  // Estados adicionales para la búsqueda
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchTimeout, setSearchTimeout] = useState<number | null>(null);
 
   // General states
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState("");
   const [activeTab, setActiveTab] = useState("productos");
+  const [showCreateProductView, setShowCreateProductView] = useState(false);
+  const [showManageProducts, setShowManageProducts] = useState(false);
 
   // Notification system
   const [notifications, setNotifications] = useState<NotificationData[]>([]);
@@ -1020,18 +1492,28 @@ function App() {
       });
 
       const data = await res.json();
+      console.log("Login response:", data); // Debug log
 
       // Check if login was successful
       if (res.ok && data.token) {
-        addNotification(`¡Bienvenido, ${data.user_id}!`, "success", 3000);
+        // Use the user_id from the form since the API doesn't return it
+        const welcomeName = userId; // Use the user_id that was used for login
+        addNotification(`¡Bienvenido, ${welcomeName}!`, "success", 3000);
         setToken(data.token);
-        setUserInfo({ user_id: data.user_id, tenant_id: data.tenant_id });
+        
+        // Get user info
+        const userInfoData = await getUserInfo(userId, data.token);
+        setUserInfo(userInfoData);
+        
         setIsAuthenticated(true);
         setCurrentView("dashboard");
-        // Reset pagination state when logging in
-        setCurrentOffset(0);
-        setHasMore(true);
+        // Reset category state when logging in
+        setSelectedCategory("all");
+        setCategoryOffset(0);
+        setCategoryHasMore(true);
         loadProductos(0, false);
+        // Load initial category products
+        loadProductsByCategory("all", 0, false);
         // Clear form fields
         setUserId("");
         setPassword("");
@@ -1063,12 +1545,15 @@ function App() {
   const handleLogout = () => {
     addNotification("Sesión cerrada exitosamente", "info", 2000);
     setToken("");
-    setUserInfo({ user_id: "", tenant_id: "" });
+    setUserInfo({ user_id: "", tenant_id: "", name: "" });
     setIsAuthenticated(false);
     setCurrentView("login");
     setCart([]);
     setProductos([]);
     setCompras([]);
+    setCategoryProducts([]);
+    setCategories([]);
+    setSelectedCategory("all");
     setResponse(""); // Clear any previous error messages
     // Clear sensitive form data
     setUserId("");
@@ -1077,9 +1562,9 @@ function App() {
     setName("");
     setTenantId("");
     // Reset pagination state
-    setCurrentOffset(0);
-    setHasMore(true);
-    setLoadingMore(false);
+    setCategoryOffset(0);
+    setCategoryHasMore(true);
+    setCategoryLoadingMore(false);
   };
 
   // Product functions
@@ -1097,27 +1582,252 @@ function App() {
           setProductos((prev) => [...prev, ...data.productos]);
         } else {
           setProductos(data.productos);
-          setFilteredProducts(data.productos);
+          // Solo actualizar filteredProducts si no hay búsqueda activa
+          if (!searchTerm) {
+            setFilteredProducts(data.productos);
+          }
         }
 
-        // Update pagination info
-        const hasMoreProducts = data.pagination?.hasMore || false;
-        const nextOffset = data.pagination?.nextOffset || offset + PAGE_SIZE;
+        // Update pagination info for general products (not used in new implementation)
+        // const hasMoreProducts = data.pagination?.hasMore || false;
+        // const nextOffset = data.pagination?.nextOffset || offset + PAGE_SIZE;
 
-        setHasMore(hasMoreProducts);
-        setCurrentOffset(nextOffset);
+        // Extraer categorías únicas
+        const allProducts = append ? [...productos, ...data.productos] : data.productos;
+        extractCategories(allProducts);
       }
     } catch (error) {
       console.error("Error loading products:", error);
     }
   };
 
-  const loadMoreProducts = async () => {
-    if (loadingMore || !hasMore) return;
+  // Función para extraer categorías únicas
+  const extractCategories = (productList: Product[]) => {
+    const uniqueCategories = Array.from(
+      new Set(productList.map(p => p.categoria).filter(Boolean))
+    ).sort();
+    setCategories(uniqueCategories);
+  };
 
-    setLoadingMore(true);
-    await loadProductos(currentOffset, true);
-    setLoadingMore(false);
+  // Función para cargar productos por categoría
+  const loadProductsByCategory = async (category: string, offset = 0, append = false) => {
+    try {
+      // Si es "all", cargar todos los productos
+      if (category === "all") {
+        const url = `${API_URLS.MS2}/productos/listar?limit=${PAGE_SIZE}&offset=${offset}`;
+        const res = await fetch(url, {
+          headers: { "Content-Type": "application/json" },
+        });
+        const data = await res.json();
+
+        if (data.productos) {
+          if (append) {
+            setCategoryProducts((prev) => [...prev, ...data.productos]);
+          } else {
+            setCategoryProducts(data.productos);
+          }
+
+          const hasMoreProducts = data.pagination?.hasMore || false;
+          const nextOffset = data.pagination?.nextOffset || offset + PAGE_SIZE;
+
+          setCategoryHasMore(hasMoreProducts);
+          setCategoryOffset(nextOffset);
+        }
+      } else {
+        // Cargar productos de una categoría específica
+        // Primero obtenemos todos los productos de esa categoría
+        let allCategoryProducts: Product[] = [];
+        let searchOffset = 0;
+        let hasMore = true;
+        const searchLimit = 50;
+
+        while (hasMore && searchOffset < 500) {
+          const url = `${API_URLS.MS2}/productos/listar?limit=${searchLimit}&offset=${searchOffset}`;
+          const res = await fetch(url, {
+            headers: { "Content-Type": "application/json" },
+          });
+          const data = await res.json();
+
+          if (data.productos && data.productos.length > 0) {
+            const categoryFilteredProducts = data.productos.filter(
+              (p: Product) => p.categoria === category
+            );
+            allCategoryProducts = [...allCategoryProducts, ...categoryFilteredProducts];
+            searchOffset += searchLimit;
+            hasMore = data.productos.length === searchLimit;
+          } else {
+            hasMore = false;
+          }
+        }
+
+        // Aplicar paginación manual
+        const startIndex = append ? categoryProducts.length : offset;
+        const endIndex = startIndex + PAGE_SIZE;
+        const paginatedProducts = allCategoryProducts.slice(startIndex, endIndex);
+
+        if (append) {
+          setCategoryProducts((prev) => [...prev, ...paginatedProducts]);
+        } else {
+          setCategoryProducts(paginatedProducts);
+        }
+
+        setCategoryHasMore(endIndex < allCategoryProducts.length);
+        setCategoryOffset(endIndex);
+      }
+    } catch (error) {
+      console.error("Error loading products by category:", error);
+    }
+  };
+
+  // Función para manejar el cambio de categoría
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    setCategoryOffset(0);
+    setCategoryHasMore(true);
+    setCategoryLoadingMore(false);
+    loadProductsByCategory(category, 0, false);
+  };
+
+  // Función para cargar más productos de la categoría actual
+  const loadMoreCategoryProducts = async () => {
+    if (categoryLoadingMore || !categoryHasMore) return;
+
+    setCategoryLoadingMore(true);
+    await loadProductsByCategory(selectedCategory, categoryOffset, true);
+    setCategoryLoadingMore(false);
+  };
+
+  // Nueva función para buscar productos en la base de datos
+  const searchProductsInDatabase = async (searchTerm: string) => {
+    if (!searchTerm || searchTerm.length < 2) {
+      setFilteredProducts(productos);
+      setSearchLoading(false);
+      return;
+    }
+
+    setSearchLoading(true);
+
+    try {
+      // Hacer múltiples solicitudes para obtener todos los productos
+      let allProducts: Product[] = [];
+      let offset = 0;
+      let hasMore = true;
+      const limit = 50; // Aumentar el límite para obtener más productos por consulta
+
+      while (hasMore && offset < 500) { // Límite de seguridad para evitar bucles infinitos
+        const url = `${API_URLS.MS2}/productos/listar?limit=${limit}&offset=${offset}`;
+        
+        const res = await fetch(url, {
+          headers: { "Content-Type": "application/json" },
+        });
+        const data = await res.json();
+
+        if (data.productos && data.productos.length > 0) {
+          allProducts = [...allProducts, ...data.productos];
+          offset += limit;
+          hasMore = data.productos.length === limit; // Si obtuvimos menos productos que el límite, no hay más
+        } else {
+          hasMore = false;
+        }
+      }
+
+      // Aplicar búsqueda fuzzy local a todos los productos obtenidos
+      const searchResults = applyFuzzySearch(searchTerm, allProducts);
+      setFilteredProducts(searchResults);
+      
+    } catch (error) {
+      console.error("Error searching products:", error);
+      // Fallback a búsqueda local si falla la búsqueda en BD
+      const localResults = applyFuzzySearch(searchTerm, productos);
+      setFilteredProducts(localResults);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  // Función para manejar la búsqueda con debounce
+  const handleSearchChange = (term: string) => {
+    setSearchTerm(term);
+    
+    // Limpiar timeout anterior
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    if (!term) {
+      setFilteredProducts(productos);
+      setSearchLoading(false);
+      return;
+    }
+
+    // Mostrar indicador de carga inmediatamente
+    setSearchLoading(true);
+
+    // Configurar nuevo timeout
+    const newTimeout = setTimeout(() => {
+      searchProductsInDatabase(term);
+    }, 300); // 300ms de debounce
+
+    setSearchTimeout(newTimeout);
+  };
+
+  // Función separada para aplicar búsqueda fuzzy
+  const applyFuzzySearch = (term: string, productList: Product[]) => {
+    const termLower = term.toLowerCase();
+
+    const filtered = productList.filter((p: Product) => {
+      // Búsqueda exacta primero
+      if (
+        p.nombre?.toLowerCase().includes(termLower) ||
+        p.descripcion?.toLowerCase().includes(termLower) ||
+        p.categoria?.toLowerCase().includes(termLower) ||
+        p.codigo?.toLowerCase().includes(termLower)
+      ) {
+        return true;
+      }
+
+      // Búsqueda fuzzy
+      if (
+        fuzzyMatch(termLower, p.nombre, 0.6) ||
+        fuzzyMatch(termLower, p.descripcion, 0.7) ||
+        fuzzyMatch(termLower, p.categoria, 0.7) ||
+        fuzzyMatch(termLower, p.codigo, 0.8)
+      ) {
+        return true;
+      }
+
+      // Búsqueda por palabras múltiples
+      const words = termLower.split(" ").filter((w) => w.length > 1);
+      if (words.length > 1) {
+        return words.every(
+          (word: string) =>
+            p.nombre?.toLowerCase().includes(word) ||
+            p.descripcion?.toLowerCase().includes(word) ||
+            p.categoria?.toLowerCase().includes(word)
+        );
+      }
+
+      return false;
+    });
+
+    // Ordenar por relevancia
+    filtered.sort((a: Product, b: Product) => {
+      const aExactScore =
+        (a.nombre?.toLowerCase().includes(termLower) ? 2 : 0) +
+        (a.descripcion?.toLowerCase().includes(termLower) ? 1 : 0) +
+        (a.categoria?.toLowerCase().includes(termLower) ? 1 : 0) +
+        (a.codigo?.toLowerCase().includes(termLower) ? 3 : 0);
+
+      const bExactScore =
+        (b.nombre?.toLowerCase().includes(termLower) ? 2 : 0) +
+        (b.descripcion?.toLowerCase().includes(termLower) ? 1 : 0) +
+        (b.categoria?.toLowerCase().includes(termLower) ? 1 : 0) +
+        (b.codigo?.toLowerCase().includes(termLower) ? 3 : 0);
+
+      return bExactScore - aExactScore;
+    });
+
+    return filtered;
   };
 
   // Levenshtein distance for fuzzy matching
@@ -1148,7 +1858,7 @@ function App() {
     (
       searchTerm: string,
       targetText: string,
-      threshold: number = 0.7
+           threshold: number = 0.7
     ): boolean => {
       if (!targetText) return false;
 
@@ -1187,68 +1897,6 @@ function App() {
       return false;
     },
     []
-  );
-
-  const searchProducts = useCallback(
-    (term: string) => {
-      if (!term) {
-        setFilteredProducts(productos);
-        return;
-      }
-
-      const termLower = term.toLowerCase();
-
-      const filtered = productos.filter((p: Product) => {
-        if (
-          p.nombre?.toLowerCase().includes(termLower) ||
-          p.descripcion?.toLowerCase().includes(termLower) ||
-          p.categoria?.toLowerCase().includes(termLower) ||
-          p.codigo?.toLowerCase().includes(termLower)
-        ) {
-          return true;
-        }
-
-        if (
-          fuzzyMatch(termLower, p.nombre, 0.6) ||
-          fuzzyMatch(termLower, p.descripcion, 0.7) ||
-          fuzzyMatch(termLower, p.categoria, 0.7) ||
-          fuzzyMatch(termLower, p.codigo, 0.8)
-        ) {
-          return true;
-        }
-
-        const words = termLower.split(" ").filter((w) => w.length > 1);
-        if (words.length > 1) {
-          return words.every(
-            (word: string) =>
-              p.nombre?.toLowerCase().includes(word) ||
-              p.descripcion?.toLowerCase().includes(word) ||
-              p.categoria?.toLowerCase().includes(word)
-          );
-        }
-
-        return false;
-      });
-
-      filtered.sort((a: Product, b: Product) => {
-        const aExactScore =
-          (a.nombre?.toLowerCase().includes(termLower) ? 2 : 0) +
-          (a.descripcion?.toLowerCase().includes(termLower) ? 1 : 0) +
-          (a.categoria?.toLowerCase().includes(termLower) ? 1 : 0) +
-          (a.codigo?.toLowerCase().includes(termLower) ? 3 : 0);
-
-        const bExactScore =
-          (b.nombre?.toLowerCase().includes(termLower) ? 2 : 0) +
-          (b.descripcion?.toLowerCase().includes(termLower) ? 1 : 0) +
-          (b.categoria?.toLowerCase().includes(termLower) ? 1 : 0) +
-          (b.codigo?.toLowerCase().includes(termLower) ? 3 : 0);
-
-        return bExactScore - aExactScore;
-      });
-
-      setFilteredProducts(filtered);
-    },
-    [productos, fuzzyMatch]
   );
 
   const loadCompras = useCallback(async () => {
@@ -1294,6 +1942,12 @@ function App() {
           JSON.stringify({ mensaje: "¡Producto creado exitosamente!" }, null, 2)
         );
         loadProductos(0, false);
+        // Reload category products if we're viewing a specific category
+        if (selectedCategory !== "all") {
+          loadProductsByCategory(selectedCategory, 0, false);
+        } else {
+          loadProductsByCategory("all", 0, false);
+        }
         setProductForm({
           codigo: "",
           nombre: "",
@@ -1302,6 +1956,7 @@ function App() {
           cantidad: "",
           categoria: "",
         });
+        setShowCreateProductView(false);
         // Clear success message after 3 seconds
         setTimeout(() => setResponse(""), 3000);
       } else {
@@ -1355,6 +2010,8 @@ function App() {
           )
         );
         loadProductos(0, false);
+        // Reload category products
+        loadProductsByCategory(selectedCategory, 0, false);
         setShowEditModal(false);
         setEditingProduct(null);
         // Clear success message after 3 seconds
@@ -1405,6 +2062,8 @@ function App() {
           )
         );
         loadProductos(0, false);
+        // Reload category products
+        loadProductsByCategory(selectedCategory, 0, false);
         setShowDeleteModal(false);
         setProductToDelete(null);
         // Clear success message after 3 seconds
@@ -1438,6 +2097,29 @@ function App() {
     } else {
       setCart([...cart, { ...product, cantidad: quantity }]);
     }
+    
+    // Show animated notification
+    addNotification(
+      `✅ ${product.nombre} añadido correctamente al carrito de compras`,
+      "success",
+      2000
+    );
+  };
+
+  // Handle create product view
+  const handleCreateProduct = () => {
+    setShowCreateProductView(true);
+  };
+
+  // Handle back to products
+  const handleBackToProducts = () => {
+    setShowCreateProductView(false);
+    setShowManageProducts(false);
+  };
+
+  const handleBackFromManageProducts = () => {
+    setShowManageProducts(false);
+    setActiveTab("productos");
   };
 
   // Handle edit product modal
@@ -1527,10 +2209,50 @@ function App() {
     setLoading(false);
   };
 
+  // Function to get user info from database
+  const getUserInfo = async (userIdParam: string, token: string) => {
+    try {
+      // First try to validate the token to get basic info
+      const validateRes = await fetch(`${API_URLS.MS1}/usuarios/validar`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          token: token,
+        }),
+      });
+      
+      if (validateRes.ok) {
+        const validateData = await validateRes.json();
+        console.log("Validate response:", validateData); // Debug log
+        return {
+          user_id: validateData.user_id || userIdParam,
+          tenant_id: validateData.tenant_id || "",
+          name: validateData.name || userIdParam // Use user_id as fallback
+        };
+      }
+    } catch (error) {
+      console.error("Error getting user info:", error);
+    }
+    
+    // Fallback
+    return {
+      user_id: userIdParam,
+      tenant_id: "",
+      name: userIdParam
+    };
+  };
+
   // Effects
   useEffect(() => {
-    searchProducts(searchTerm);
-  }, [searchTerm, searchProducts]);
+    // Limpiar timeout al cambiar de componente
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    };
+  }, [searchTimeout]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -1584,51 +2306,80 @@ function App() {
       {currentView === "dashboard" && (
         <div className="min-h-screen">
           <DashboardHeader userInfo={userInfo} handleLogout={handleLogout} />
-          <NavigationTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+          <NavigationTabs 
+            activeTab={activeTab} 
+            setActiveTab={setActiveTab} 
+            onCreateProduct={handleCreateProduct}
+            showCreateProductView={showCreateProductView}
+            setShowCreateProductView={setShowCreateProductView}
+            showManageProducts={showManageProducts}
+            setShowManageProducts={setShowManageProducts}
+          />
 
-          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            {activeTab === "productos" && (
-              <div className="space-y-6">
-                <SearchSection
-                  searchTerm={searchTerm}
-                  setSearchTerm={setSearchTerm}
-                  filteredProducts={filteredProducts}
-                  setSelectedProduct={setSelectedProduct}
-                  addToCart={addToCart}
-                  onEditProduct={handleEditProduct}
-                  onDeleteProduct={handleDeleteProduct}
-                />
+          {showCreateProductView ? (
+            <CreateProductView
+              productForm={productForm}
+              setProductForm={setProductForm}
+              createProduct={createProduct}
+              loading={loading}
+              onBack={handleBackToProducts}
+            />
+          ) : showManageProducts ? (
+            <ManageProducts
+              token={token}
+              onBack={handleBackFromManageProducts}
+              addNotification={addNotification}
+              API_URLS={API_URLS}
+              userInfo={userInfo}
+            />
+          ) : (
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+              {activeTab === "productos" && (
+                <div className="space-y-6">
+                  <SearchSection
+                    searchTerm={searchTerm}
+                    setSearchTerm={setSearchTerm}
+                    filteredProducts={filteredProducts}
+                    setSelectedProduct={setSelectedProduct}
+                    addToCart={addToCart}
+                    searchLoading={searchLoading}
+                    handleSearchChange={handleSearchChange}
+                  />
 
-                <ProductForm
-                  productForm={productForm}
-                  setProductForm={setProductForm}
-                  createProduct={createProduct}
-                  loading={loading}
-                />
+                  <CategoryBar
+                    categories={categories}
+                    selectedCategory={selectedCategory}
+                    onCategoryChange={handleCategoryChange}
+                  />
 
-                <ProductList
-                  productos={productos}
-                  addToCart={addToCart}
-                  hasMore={hasMore}
-                  loadingMore={loadingMore}
-                  loadMoreProducts={loadMoreProducts}
-                />
-              </div>
-            )}
+                  <CategoryProductsSection
+                    selectedCategory={selectedCategory}
+                    categoryProducts={categoryProducts}
+                    categoryHasMore={categoryHasMore}
+                    categoryLoadingMore={categoryLoadingMore}
+                    loadMoreCategoryProducts={loadMoreCategoryProducts}
+                    addToCart={addToCart}
+                    onEditProduct={handleEditProduct}
+                    onDeleteProduct={handleDeleteProduct}
+                    setSelectedProduct={setSelectedProduct}
+                  />
+                </div>
+              )}
 
-            {activeTab === "compras" && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <CartSection
-                  cart={cart}
-                  updateCartQuantity={updateCartQuantity}
-                  removeFromCart={removeFromCart}
-                  realizarCompra={realizarCompra}
-                  loading={loading}
-                />
-                <ComprasSection compras={compras} />
-              </div>
-            )}
-          </main>
+              {activeTab === "compras" && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <CartSection
+                    cart={cart}
+                    updateCartQuantity={updateCartQuantity}
+                    removeFromCart={removeFromCart}
+                    realizarCompra={realizarCompra}
+                    loading={loading}
+                  />
+                  <ComprasSection compras={compras} />
+                </div>
+              )}
+            </main>
+          )}
 
           {/* Product Modal */}
           {selectedProduct && (
