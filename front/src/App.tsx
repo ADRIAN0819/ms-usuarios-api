@@ -453,9 +453,6 @@ const BestSellersCarousel: React.FC<{
             Premium Products
           </span>
         </div>
-        <span className="text-sm text-slate-400">
-          {bestSellers.length} products found
-        </span>
       </div>
 
       <div className="relative">
@@ -604,21 +601,18 @@ const LastChanceCarousel: React.FC<{
               ¡Última Oportunidad!
             </h3>
             <p className="text-sm text-orange-300">
-              Stock limitado - No te quedes sin el tuyo
+              Limited stock - buy before its too late!
             </p>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs text-red-400 bg-red-400/20 px-3 py-1 rounded-full animate-pulse">
-              🔥 OFERTA LIMITADA
+              🔥 LIMITED OFFER
             </span>
             <span className="text-xs text-orange-400 bg-orange-400/20 px-3 py-1 rounded-full">
-              ⏰ ÚLTIMAS UNIDADES
+              ⏰ LAST UNITS
             </span>
           </div>
         </div>
-        <span className="text-sm text-slate-400">
-          {lastChanceProducts.length} productos únicos disponibles
-        </span>
       </div>
 
       <div className="relative">
@@ -640,20 +634,20 @@ const LastChanceCarousel: React.FC<{
                 >
                   {/* Urgency indicator */}
                   <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full animate-bounce">
-                    ¡Solo {product.cantidad} left!
+                    ¡Only {product.cantidad} left!
                   </div>
 
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-gradient-to-r from-red-400 to-orange-400 rounded-full animate-pulse"></div>
                       <span className="text-xs text-red-400 font-medium">
-                        ÚLTIMA OPORTUNIDAD
+                        LAST CHANCE
                       </span>
                     </div>
                     <div className="flex items-center gap-1">
                       <span className="text-yellow-400 text-sm">🚨</span>
                       <span className="text-xs text-orange-400 font-bold">
-                        STOCK BAJO
+                        LOW STOCK
                       </span>
                     </div>
                   </div>
@@ -696,14 +690,14 @@ const LastChanceCarousel: React.FC<{
                       className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-red-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-1 animate-pulse"
                     >
                       <Icons.ShoppingCart />
-                      ¡Comprar Ya!
+                      ¡Add Now!
                     </button>
                   </div>
 
                   {/* Progress bar showing stock level */}
                   <div className="mt-3">
                     <div className="flex justify-between text-xs text-slate-400 mb-1">
-                      <span>Stock disponible</span>
+                      <span>Stock available</span>
                       <span>{product.cantidad}/15</span>
                     </div>
                     <div className="w-full bg-gray-700 rounded-full h-2">
