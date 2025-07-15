@@ -420,6 +420,309 @@ const ScrollingBanner: React.FC = () => {
   );
 };
 
+// Modern Best Sellers Carousel Component
+const BestSellersCarousel: React.FC<{
+  products: Product[];
+  onProductClick: (product: Product) => void;
+  addToCart: (product: Product) => void;
+}> = ({ products, onProductClick, addToCart }) => {
+  // Filter products with price > 600
+  const bestSellers = products.filter(
+    (product) => parseFloat(product.precio.toString()) > 600
+  );
+
+  if (bestSellers.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-lg mb-6">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center">
+            <svg
+              className="w-4 h-4 text-white"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-semibold text-white">Best Sellers</h3>
+          <span className="text-sm text-yellow-400 bg-yellow-400/20 px-3 py-1 rounded-full">
+            Premium Products
+          </span>
+        </div>
+        <span className="text-sm text-slate-400">
+          {bestSellers.length} products found
+        </span>
+      </div>
+
+      <div className="relative">
+        <div className="overflow-hidden">
+          <div
+            className="flex space-x-4 animate-carousel"
+            style={{
+              animation: "carousel 360s linear infinite",
+              width: "max-content",
+            }}
+          >
+            {/* Render products multiple times for seamless loop */}
+            {[...bestSellers, ...bestSellers, ...bestSellers].map(
+              (product, index) => (
+                <div
+                  key={`${product.codigo}-${index}`}
+                  className="flex-shrink-0 w-80 bg-gradient-to-br from-white/10 to-white/5 rounded-xl p-4 border border-white/20 hover:border-yellow-400/50 transition-all duration-300 cursor-pointer group hover:scale-105"
+                  onClick={() => onProductClick(product)}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full animate-pulse"></div>
+                      <span className="text-xs text-yellow-400 font-medium">
+                        BEST SELLER
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <svg
+                          key={i}
+                          className="w-3 h-3 text-yellow-400"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                      ))}
+                    </div>
+                  </div>
+
+                  <h4 className="text-white font-semibold text-lg mb-2 group-hover:text-yellow-400 transition-colors line-clamp-2">
+                    {product.nombre}
+                  </h4>
+
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-emerald-400 font-bold text-xl">
+                      ${product.precio}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-slate-400">Stock:</span>
+                      <span
+                        className={`text-xs font-medium ${
+                          product.cantidad > 0
+                            ? "text-emerald-400"
+                            : "text-red-400"
+                        }`}
+                      >
+                        {product.cantidad}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-blue-400 bg-blue-400/20 px-2 py-1 rounded-full">
+                      {product.categoria}
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToCart(product);
+                      }}
+                      disabled={product.cantidad <= 0}
+                      className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-yellow-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-1"
+                    >
+                      <Icons.ShoppingCart />
+                      Add
+                    </button>
+                  </div>
+                </div>
+              )
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Modern Last Chance Carousel Component
+const LastChanceCarousel: React.FC<{
+  products: Product[];
+  onProductClick: (product: Product) => void;
+  addToCart: (product: Product) => void;
+}> = ({ products, onProductClick, addToCart }) => {
+  // Debug: Log all products received
+  console.log("All products received:", products.length);
+  console.log("Products with quantities:", products.map(p => ({ 
+    nombre: p.nombre, 
+    cantidad: p.cantidad, 
+    codigo: p.codigo 
+  })));
+
+  // Filter products with quantity < 15 and remove duplicates by codigo
+  const lastChanceProducts = products.filter(
+    (product, index, self) => 
+      product.cantidad < 15 && 
+      product.cantidad > 0 && 
+      self.findIndex(p => p.codigo === product.codigo) === index
+  );
+
+  console.log("Products with quantity < 15:", lastChanceProducts.length);
+  console.log("Last chance products:", lastChanceProducts.map(p => ({ 
+    nombre: p.nombre, 
+    cantidad: p.cantidad,
+    codigo: p.codigo 
+  })));
+
+  if (lastChanceProducts.length === 0) {
+    return null;
+  }
+
+  // Don't repeat if we have enough products
+  const carouselProducts = lastChanceProducts.length >= 8 
+    ? lastChanceProducts
+    : [...lastChanceProducts, ...lastChanceProducts];
+
+  return (
+    <div className="bg-gradient-to-r from-red-600/20 via-orange-600/20 to-yellow-600/20 backdrop-blur-xl rounded-2xl p-6 border border-red-500/30 shadow-lg mb-6">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-gradient-to-r from-red-500 to-orange-500 rounded-xl flex items-center justify-center animate-pulse">
+            <svg
+              className="w-4 h-4 text-white"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold text-white">
+              ¡Última Oportunidad!
+            </h3>
+            <p className="text-sm text-orange-300">
+              Stock limitado - No te quedes sin el tuyo
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-red-400 bg-red-400/20 px-3 py-1 rounded-full animate-pulse">
+              🔥 OFERTA LIMITADA
+            </span>
+            <span className="text-xs text-orange-400 bg-orange-400/20 px-3 py-1 rounded-full">
+              ⏰ ÚLTIMAS UNIDADES
+            </span>
+          </div>
+        </div>
+        <span className="text-sm text-slate-400">
+          {lastChanceProducts.length} productos únicos disponibles
+        </span>
+      </div>
+
+      <div className="relative">
+        <div className="overflow-hidden">
+          <div
+            className="flex space-x-4 animate-lastchance"
+            style={{
+              animation: "lastchance 180s linear infinite",
+              width: "max-content",
+            }}
+          >
+            {/* Render unique products with controlled repetition */}
+            {carouselProducts.map(
+              (product, index) => (
+                <div
+                  key={`${product.codigo}-${index}`}
+                  className="flex-shrink-0 w-80 bg-gradient-to-br from-red-500/10 to-orange-500/10 rounded-xl p-4 border border-red-500/30 hover:border-red-400/60 transition-all duration-300 cursor-pointer group hover:scale-105 relative overflow-hidden"
+                  onClick={() => onProductClick(product)}
+                >
+                  {/* Urgency indicator */}
+                  <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full animate-bounce">
+                    ¡Solo {product.cantidad} left!
+                  </div>
+
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-gradient-to-r from-red-400 to-orange-400 rounded-full animate-pulse"></div>
+                      <span className="text-xs text-red-400 font-medium">
+                        ÚLTIMA OPORTUNIDAD
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-yellow-400 text-sm">🚨</span>
+                      <span className="text-xs text-orange-400 font-bold">
+                        STOCK BAJO
+                      </span>
+                    </div>
+                  </div>
+
+                  <h4 className="text-white font-semibold text-lg mb-2 group-hover:text-red-400 transition-colors line-clamp-2">
+                    {product.nombre}
+                  </h4>
+
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-400 text-sm line-through">
+                        $
+                        {(
+                          parseFloat(product.precio.toString()) *
+                          1.2
+                        ).toFixed(2)}
+                      </span>
+                      <span className="text-red-400 font-bold text-xl">
+                        ${product.precio}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-slate-400">Stock:</span>
+                      <span className="text-xs font-medium text-red-400 animate-pulse">
+                        {product.cantidad}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-blue-400 bg-blue-400/20 px-2 py-1 rounded-full">
+                      {product.categoria}
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToCart(product);
+                      }}
+                      disabled={product.cantidad <= 0}
+                      className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-red-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-1 animate-pulse"
+                    >
+                      <Icons.ShoppingCart />
+                      ¡Comprar Ya!
+                    </button>
+                  </div>
+
+                  {/* Progress bar showing stock level */}
+                  <div className="mt-3">
+                    <div className="flex justify-between text-xs text-slate-400 mb-1">
+                      <span>Stock disponible</span>
+                      <span>{product.cantidad}/15</span>
+                    </div>
+                    <div className="w-full bg-gray-700 rounded-full h-2">
+                      <div
+                        className="bg-gradient-to-r from-red-500 to-orange-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${(product.cantidad / 15) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              )
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Modern Navigation Tabs
 const NavigationTabs: React.FC<{
   activeTab: string;
@@ -429,7 +732,15 @@ const NavigationTabs: React.FC<{
   setShowCreateProductView: (show: boolean) => void;
   showManageProducts: boolean;
   setShowManageProducts: (show: boolean) => void;
-}> = ({ activeTab, setActiveTab, onCreateProduct, showCreateProductView, setShowCreateProductView, showManageProducts, setShowManageProducts }) => (
+}> = ({
+  activeTab,
+  setActiveTab,
+  onCreateProduct,
+  showCreateProductView,
+  setShowCreateProductView,
+  showManageProducts,
+  setShowManageProducts,
+}) => (
   <nav className="bg-white/5 backdrop-blur-xl border-b border-white/10">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="flex items-center justify-center">
@@ -617,7 +928,7 @@ const CreateProductView: React.FC<{
           <button
             onClick={createProduct}
             disabled={loading}
-            className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-blue-600 text-white rounded-xl font-medium hover:from-emerald-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 shadow-lg"
+            className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-blue-600 text-white rounded-xl font-medium hover:from-emerald-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-1"
           >
             {loading ? <LoadingSpinner /> : <Icons.Plus />}
             {loading ? "Creating Product..." : "Create Product"}
@@ -1554,6 +1865,7 @@ function App() {
         }),
       });
 
+
       const data = await res.json();
 
       // Debug logging to see what the server is returning
@@ -1683,7 +1995,7 @@ function App() {
         setSelectedCategory("all");
         setCategoryOffset(0);
         setCategoryHasMore(true);
-        loadProductos(0, false);
+        loadAllProducts(); // Load ALL products for carousels
         // Load initial category products
         loadProductsByCategory("all", 0, false);
         // Clear form fields
@@ -1737,6 +2049,44 @@ function App() {
     setCategoryOffset(0);
     setCategoryHasMore(true);
     setCategoryLoadingMore(false);
+  };
+
+  // Load ALL products for carousels (not paginated)
+  const loadAllProducts = async () => {
+    try {
+      let allProducts: Product[] = [];
+      let offset = 0;
+      let hasMore = true;
+      const limit = 50;
+
+      while (hasMore && offset < 1000) { // Safety limit
+        const url = `${API_URLS.MS2}/productos/listar?limit=${limit}&offset=${offset}`;
+        const res = await fetch(url, {
+          headers: { "Content-Type": "application/json" },
+        });
+        const data = await res.json();
+
+        if (data.productos && data.productos.length > 0) {
+          allProducts = [...allProducts, ...data.productos];
+          offset += limit;
+          hasMore = data.productos.length === limit;
+        } else {
+          hasMore = false;
+        }
+      }
+
+      console.log("Loaded all products:", allProducts.length);
+      setProductos(allProducts);
+      
+      // Extract unique categories
+      const uniqueCategories = [...new Set(allProducts.map(p => p.categoria))];
+      setCategories(uniqueCategories);
+      
+      return allProducts;
+    } catch (error) {
+      console.error("Error loading all products:", error);
+      return [];
+    }
   };
 
   // Product functions
@@ -2472,7 +2822,7 @@ function App() {
     const min = parseFloat(minPrice) || 0;
     const max = parseFloat(maxPrice) || Infinity;
 
-    return productList.filter(product => {
+    return productList.filter((product) => {
       const price = parseFloat(product.precio.toString());
       return price >= min && price <= max;
     });
@@ -2579,6 +2929,18 @@ function App() {
                     addToCart={addToCart}
                     searchLoading={searchLoading}
                     handleSearchChange={handleSearchChange}
+                  />
+
+                  <BestSellersCarousel
+                    products={productos}
+                    onProductClick={setSelectedProduct}
+                    addToCart={addToCart}
+                  />
+
+                  <LastChanceCarousel
+                    products={productos}
+                    onProductClick={setSelectedProduct}
+                    addToCart={addToCart}
                   />
 
                   <CategoryBar
